@@ -1,0 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Edu+NSW+ACT+Foundation:wght@522&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary-color: #ffffff;
+  --text-primary-color: #111314;
+  --btn-primary-bg-color: rgb(0, 113, 235);
+
+  /* testing box shadows */
+  --green-transparent: rgba(78, 172, 109, 0.25);
+
+  --info-bg-color: #dcedfc;
+  --info-text-color: #306391;
+
+  --error-bg-color: #ef476f;
+  --error-text-color: #fff;
+  --bs-font-sans-serif: "Cerebri", "arial", sans-serif;
+  --bs-font-monospace: SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+  --bs-body-font-family: var(--bs-font-sans-serif);
+  --bs-body-font-size: 0.9375rem;
+  --bs-body-font-weight: 400;
+  --bs-body-line-height: 1.5;
+
+  /* COPIED FROM  */
+  --bs-blue: #4eac6d;
+  --bs-indigo: #560bad;
+  --bs-purple: #6153cc;
+  --bs-pink: #e83e8c;
+  --bs-red: #ef476f;
+  --bs-orange: #fc814a;
+  --bs-yellow: #ffd166;
+  --bs-green: #06d6a0;
+  --bs-teal: #050505;
+  --bs-cyan: #50a5f1;
+  --bs-white: #fff;
+  --bs-gray: #797c8c;
+  --bs-gray-dark: #343a40;
+  --bs-gray-100: #f8f9fa;
+  --bs-gray-200: #f9f9f9;
+  --bs-gray-300: #f6f6f9;
+  --bs-gray-400: #e6ebf5;
+  --bs-gray-500: #adb5bd;
+  --bs-gray-600: #797c8c;
+  --bs-gray-700: #495057;
+  --bs-gray-800: #343a40;
+  --bs-gray-900: #212529;
+  --bs-primary: #4eac6d;
+  --bs-secondary: #797c8c;
+  --bs-success: #06d6a0;
+  --bs-info: #50a5f1;
+  --bs-warning: #ffd166;
+  --bs-danger: #ef476f;
+  --bs-purple: #6153cc;
+  --bs-pink: #e83e8c;
+  --bs-light: #f6f6f9;
+  --bs-indigo: #560bad;
+  --bs-dark: #343a40;
+  /* font */
+  --font-size: 1.1rem;
+  --font-size-toolbar: 1.3rem;
+}
+
+:root.dark {
+  --bg-primary-color: #121212; /* Dark background color */
+  --text-primary-color: #ffffff; /* White text color */
+}
+
