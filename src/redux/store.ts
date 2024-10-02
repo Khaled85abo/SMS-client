@@ -3,6 +3,8 @@ import currencySlice from "./features/currency/currencySlice";
 import { currencyApi } from "./features/currency/currencyApi";
 import workspaceSlice from "./features/workspace/workspaceSlice";
 import { workspaceApi } from "./features/workspace/workspaceApi";
+import boxSlice from "./features/box/boxSlice";
+import { boxApi } from "./features/box/boxApi";
 import themeSlice from "./features/theme/themeSlice";
 import authSlice from "./features/auth/authSlice";
 import { authApi } from "./features/auth/authApi";
@@ -13,12 +15,14 @@ export const store = configureStore({
     theme: themeSlice,
     auth: authSlice,
     workspace: workspaceSlice,
+    box: boxSlice,
     [currencyApi.reducerPath]: currencyApi.reducer,
     [authApi.reducerPath]: authApi.reducer,
     [workspaceApi.reducerPath]: workspaceApi.reducer,
+    [boxApi.reducerPath]: boxApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(currencyApi.middleware, authApi.middleware, workspaceApi.middleware),
+    getDefaultMiddleware().concat(currencyApi.middleware, authApi.middleware, workspaceApi.middleware, boxApi.middleware),
 });
 
 // Infer the `RootState` and `AppDispatch` types from the store itself

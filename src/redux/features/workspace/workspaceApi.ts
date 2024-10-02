@@ -1,6 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import config from "../../../config";
-import { setWorkspaces } from "./workspaceSlice";
 import { RootState } from "../../store";
 
 export const workspaceApi = createApi({
@@ -17,11 +16,11 @@ export const workspaceApi = createApi({
             return headers;
         },
     }),
-    tagTypes: ["Workspace", "SingleWorkspace", "AddWorkspace", "UpdateWorkspace", "RemoveWorkspace"],
+    tagTypes: ["Workspaces", "SingleWorkspace"],
     endpoints: (builder) => ({
         getWorkspaces: builder.query({
             query: () => "",
-            providesTags: ["Workspace"],
+            providesTags: ["Workspaces"],
         }),
         getSingleWorkspace: builder.query({
             query: (workspaceId) => `/${workspaceId}`,
@@ -33,19 +32,19 @@ export const workspaceApi = createApi({
                 method: "POST",
                 body: newWorkspaceData,
             }),
-            invalidatesTags: ["Workspace"],
+            invalidatesTags: ["Workspaces"],
         }),
         updateWorkspace: builder.mutation({
             query: (body) => ({ url: `/${body.id}`, body: body.data, method: "PUT" }),
             invalidatesTags: (result, error, arg) => [
-                "Workspace",
+                "Workspaces",
                 { type: "SingleWorkspace", id: arg.id },
             ],
         }),
         removeWorkspace: builder.mutation({
             query: (workspaceId) => ({ url: `/${workspaceId}`, method: "DELETE" }),
             invalidatesTags: (result, error, workspaceId) => [
-                "Workspace",
+                "Workspaces",
                 { type: "SingleWorkspace", id: workspaceId },
             ],
         }),

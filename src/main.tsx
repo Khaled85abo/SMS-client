@@ -30,6 +30,7 @@ import {
   useLazyMeQuery,
   useLazyRefreshTokenQuery,
 } from "./redux/features/auth/authApi";
+import Workspace from "./pages/SingleWorkspace";
 
 const ProtectedRoutes = () => {
   const location = useLocation();
@@ -88,6 +89,7 @@ function App() {
         <Route path="/" element={<Landing />}></Route>
         <Route path="/about" element={<About />}></Route>
         <Route path="/workspaces" element={<Workspaces />}></Route>
+        <Route path="/workspaces/:workspaceId" element={<Workspace />}></Route>
         <Route element={<ProtectedRoutes />}>
           <Route path="/profile" element={<Profile />}></Route>
           <Route path="/wardrobe" element={<Wardrobe />}></Route>

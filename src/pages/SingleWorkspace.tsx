@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { useGetWorkspacesQuery, useCreateWorkspaceMutation, useUpdateWorkspaceMutation, useRemoveWorkspaceMutation } from "../redux/features/workspace/workspaceApi";
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useLazyGetSingleWorkspaceQuery } from "../redux/features/workspace/workspaceApi";
+import { useCreateBoxMutation, useUpdateBoxMutation, useRemoveBoxMutation } from "../redux/features/box/boxApi";
+import { useParams, Link } from 'react-router-dom';
 
 const actionTypes = {
     create: 'create',
@@ -9,38 +10,39 @@ const actionTypes = {
 } as const;
 type ActionType = typeof actionTypes[keyof typeof actionTypes];
 
-type Workspace = {
+type Box = {
     id: string;
     name: string;
     description: string;
-    boxes: any[];
+    items: any[];
 
 }
 
-const Workspaces = () => {
-    const { data, isLoading, isSuccess } = useGetWorkspacesQuery({});
-    const [createWorkspace, { isLoading: isCreating }] = useCreateWorkspaceMutation();
-    const [updateWorkspace, { isLoading: isUpdating }] = useUpdateWorkspaceMutation();
-    const [deleteWorkspace, { isLoading: isDeleting }] = useRemoveWorkspaceMutation();
+const SingleWorkspace = () => {
+    const { workspaceId } = useParams();
+    const [getSingleWorkspace, { data: singleWorkspace, isLoading, isSuccess }] = useLazyGetSingleWorkspaceQuery({});
+    const [createBox, { isLoading: isCreating }] = useCreateBoxMutation();
+    const [updateBox, { isLoading: isUpdating }] = useUpdateBoxMutation();
+    const [deleteBox, { isLoading: isDeleting }] = useRemoveBoxMutation();
     const [modalOpen, setModalOpen] = useState(false);
     const [modalType, setModalType] = useState<ActionType | null>(null);
-    const [selectedWorkspace, setSelectedWorkspace] = useState<Workspace | null>(null);
-    const [newWorkspace, setNewWorkspace] = useState({ name: '', description: '' });
+    const [selectedWorkspace, setSelectedWorkspace] = useState<Box | null>(null);
+    const [newBox, setNewBox] = useState({ name: '', description: '' });
     const [modalError, setModalError] = useState<string | null>(null);
     const [modalSuccess, setModalSuccess] = useState<string | null>(null);
 
-    const openModal = (type: ActionType, workspace: Workspace | null = null) => {
+    const openModal = (type: ActionType, box: Box | null = null) => {
         setModalType(type);
-        setSelectedWorkspace(workspace);
+        setSelectedWorkspace(box);
         setModalOpen(true);
         // Reset the error and success states
         setModalError(null);
         setModalSuccess(null);
         // Reset the newWorkspace state if it's a create action
         if (type === actionTypes.create) {
-            setNewWorkspace({ name: '', description: '' });
-        } else if (type === actionTypes.edit && workspace) {
-            setNewWorkspace({ name: workspace.name, description: workspace.description });
+            setNewBox({ name: '', description: '' });
+        } else if (type === actionTypes.edit && box) {
+            setNewBox({ name: box.name, description: box.description });
         }
     };
 
@@ -48,61 +50,66 @@ const Workspaces = () => {
         setModalOpen(false);
         setModalType(null);
         setSelectedWorkspace(null);
-        setNewWorkspace({ name: '', description: '' });
+        setNewBox({ name: '', description: '' });
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setNewWorkspace(prev => ({ ...prev, [name]: value }));
+        setNewBox(prev => ({ ...prev, [name]: value }));
     };
 
     const submitModal = () => {
         if (modalType === actionTypes.create) {
-            createWorkspace(newWorkspace)
+            createBox(newBox)
                 .unwrap()
                 .then(() => setModalSuccess('Workspace created successfully!'))
                 .catch((err) => setModalError(`Error: ${err.message}`));
         } else if (modalType === actionTypes.edit && selectedWorkspace) {
-            updateWorkspace({ id: selectedWorkspace.id, data: newWorkspace })
+            updateBox({ id: selectedWorkspace.id, data: newBox })
                 .unwrap()
                 .then(() => setModalSuccess('Workspace updated successfully!'))
                 .catch((err) => setModalError(`Error: ${err.message}`));
         } else if (modalType === actionTypes.delete && selectedWorkspace) {
-            deleteWorkspace(selectedWorkspace.id)
+            deleteBox(selectedWorkspace.id)
                 .unwrap()
                 .then(() => setModalSuccess('Workspace deleted successfully!'))
                 .catch((err) => setModalError(`Error: ${err.message}`));
         }
     };
+
+    useEffect(() => {
+        getSingleWorkspace(workspaceId);
+    }, [workspaceId]);
+
     return (
         <div>
-            <h1 className='mt-4 ml-4 text-2xl font-bold'>Workspaces</h1>
+            <h1 className='mt-4 ml-4 text-2xl font-bold'>Boxes of {singleWorkspace?.name}</h1>
             <div className="flex justify-between items-center p-4 mb-4">
-                <h1 className="text-xl font-bold">Workspaces</h1>
+                <h1 className="text-xl font-bold">Boxes</h1>
                 <button
                     className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
                     onClick={() => openModal(actionTypes.create)}
                 >
-                    Add New Workspace
+                    Add New Box
                 </button>
             </div>
             {isLoading && <p>Loading...</p>}
-            {isSuccess && data.map((workspace: Workspace) => (
-                <div key={workspace.id} className="bg-white shadow-md rounded-lg p-4 mb-4">
+            {isSuccess && singleWorkspace.boxes.map((box: Box) => (
+                <div key={box.id} className="bg-white shadow-md rounded-lg p-4 mb-4">
                     <div className="flex justify-between items-center">
-                        <Link to={`/workspaces/${workspace.id}`}>
-                            <h2 className="text-xl font-semibold">{workspace.name}</h2>
+                        <Link to={`/workspaces/${singleWorkspace.id}/${box.id}`}>
+                            <h2 className="text-xl font-semibold">{box.name}</h2>
                         </Link>
                         <div>
                             <button
                                 className="bg-blue-500 text-white px-3 py-1 rounded mr-2 hover:bg-blue-600"
-                                onClick={() => openModal(actionTypes.edit, workspace)}
+                                onClick={() => openModal(actionTypes.edit, box)}
                             >
                                 Edit
                             </button>
                             <button
                                 className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                                onClick={() => openModal(actionTypes.delete, workspace)}
+                                onClick={() => openModal(actionTypes.delete, box)}
                             >
                                 Delete
                             </button>
@@ -127,7 +134,7 @@ const Workspaces = () => {
                                     <input
                                         type="text"
                                         name="name"
-                                        value={newWorkspace.name}
+                                        value={newBox.name}
                                         onChange={handleInputChange}
                                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                     />
@@ -136,7 +143,7 @@ const Workspaces = () => {
                                     <label className="block text-sm font-medium text-gray-700">Description</label>
                                     <textarea
                                         name="description"
-                                        value={newWorkspace.description}
+                                        value={newBox.description}
                                         onChange={handleInputChange}
                                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                     />
@@ -181,4 +188,4 @@ const Workspaces = () => {
     );
 }
 
-export default Workspaces;
+export default SingleWorkspace;
