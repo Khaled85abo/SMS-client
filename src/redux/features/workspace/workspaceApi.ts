@@ -12,7 +12,7 @@ export const workspaceApi = createApi({
             const token = (getState() as RootState).auth.token;
             // If there is a token, add it to the headers
             if (token) {
-                headers.set("authorization", `Bearer ${token}`);
+                headers.set("authorization", `bearer ${token}`);
             }
             return headers;
         },
@@ -21,73 +21,33 @@ export const workspaceApi = createApi({
     endpoints: (builder) => ({
         getWorkspaces: builder.query({
             query: () => "",
-            onQueryStarted: async (_, { queryFulfilled, dispatch }) => {
-                try {
-                    const { data } = await queryFulfilled;
-                    console.log("user workspaces recieved: ", data);
-                    dispatch(setWorkspaces(data));
-                } catch (error) {
-                    console.log("error fetching user workspaces: ", error);
-                }
-            },
+            providesTags: ["Workspace"],
         }),
         getSingleWorkspace: builder.query({
             query: (workspaceId) => `/${workspaceId}`,
-            onQueryStarted: async (_, { queryFulfilled, dispatch }) => {
-                try {
-                    const { data } = await queryFulfilled;
-                    console.log("user workspaces recieved: ", data);
-                    dispatch(setWorkspaces(data));
-                } catch (error) {
-                    console.log("error fetching user workspaces: ", error);
-                }
-            },
+            providesTags: (result, error, workspaceId) => [{ type: "SingleWorkspace", id: workspaceId }],
         }),
-        addWorkspace: builder.mutation({
+        createWorkspace: builder.mutation({
             query: (newWorkspaceData) => ({
                 url: "",
                 method: "POST",
                 body: newWorkspaceData,
             }),
-            onQueryStarted: async (_, { queryFulfilled, dispatch }) => {
-                try {
-                    const { data } = await queryFulfilled;
-                    console.log("New workspace added:", data);
-
-                    // Dispatch the getWorkspaces query to refresh the workspace list
-                    refreshWorkspaces(dispatch);
-                } catch (error) {
-                    console.error("Error adding workspace:", error);
-                }
-            },
+            invalidatesTags: ["Workspace"],
         }),
         updateWorkspace: builder.mutation({
-            query: (body) => ({ url: "", body, method: "PUT" }),
-            onQueryStarted: async (_, { queryFulfilled, dispatch }) => {
-                try {
-                    const { data } = await queryFulfilled;
-                    console.log("Workspace updated:", data);
-
-                    // Refresh workspaces
-                    refreshWorkspaces(dispatch);
-                } catch (error) {
-                    console.error("Error updating workspace:", error);
-                }
-            }
+            query: (body) => ({ url: `/${body.id}`, body: body.data, method: "PUT" }),
+            invalidatesTags: (result, error, arg) => [
+                "Workspace",
+                { type: "SingleWorkspace", id: arg.id },
+            ],
         }),
         removeWorkspace: builder.mutation({
             query: (workspaceId) => ({ url: `/${workspaceId}`, method: "DELETE" }),
-            onQueryStarted: async (_, { queryFulfilled, dispatch }) => {
-                try {
-                    const { data } = await queryFulfilled;
-                    console.log("Workspace removed:", data);
-
-                    // Refresh workspaces
-                    refreshWorkspaces(dispatch);
-                } catch (error) {
-                    console.error("Error removing workspace:", error);
-                }
-            }
+            invalidatesTags: (result, error, workspaceId) => [
+                "Workspace",
+                { type: "SingleWorkspace", id: workspaceId },
+            ],
         }),
 
     }),
@@ -96,13 +56,9 @@ export const workspaceApi = createApi({
 export const {
     useGetWorkspacesQuery,
     useLazyGetSingleWorkspaceQuery,
-    useAddWorkspaceMutation,
+    useCreateWorkspaceMutation,
     useUpdateWorkspaceMutation,
     useRemoveWorkspaceMutation,
 } = workspaceApi;
 
-// Add this helper function at an appropriate place in your file
-const refreshWorkspaces = (dispatch: any) => {
-    dispatch(workspaceApi.endpoints.getWorkspaces.initiate({}));
-};
 
