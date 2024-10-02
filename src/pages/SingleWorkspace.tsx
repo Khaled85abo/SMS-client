@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useLazyGetSingleWorkspaceQuery } from "../redux/features/workspace/workspaceApi";
 import { useCreateBoxMutation, useUpdateBoxMutation, useRemoveBoxMutation } from "../redux/features/box/boxApi";
 import { useParams, Link } from 'react-router-dom';
@@ -15,6 +15,7 @@ type Box = {
     name: string;
     description: string;
     items: any[];
+    work_space_id: string;
 
 }
 
@@ -27,7 +28,7 @@ const SingleWorkspace = () => {
     const [modalOpen, setModalOpen] = useState(false);
     const [modalType, setModalType] = useState<ActionType | null>(null);
     const [selectedWorkspace, setSelectedWorkspace] = useState<Box | null>(null);
-    const [newBox, setNewBox] = useState({ name: '', description: '' });
+    const [newBox, setNewBox] = useState({ name: '', description: '', work_space_id: workspaceId });
     const [modalError, setModalError] = useState<string | null>(null);
     const [modalSuccess, setModalSuccess] = useState<string | null>(null);
 
@@ -40,9 +41,9 @@ const SingleWorkspace = () => {
         setModalSuccess(null);
         // Reset the newWorkspace state if it's a create action
         if (type === actionTypes.create) {
-            setNewBox({ name: '', description: '' });
+            setNewBox({ name: '', description: '', work_space_id: workspaceId });
         } else if (type === actionTypes.edit && box) {
-            setNewBox({ name: box.name, description: box.description });
+            setNewBox({ name: box.name, description: box.description, work_space_id: workspaceId });
         }
     };
 
@@ -50,7 +51,7 @@ const SingleWorkspace = () => {
         setModalOpen(false);
         setModalType(null);
         setSelectedWorkspace(null);
-        setNewBox({ name: '', description: '' });
+        setNewBox({ name: '', description: '', work_space_id: workspaceId });
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -59,23 +60,40 @@ const SingleWorkspace = () => {
     };
 
     const submitModal = () => {
+        console.log(newBox);
         if (modalType === actionTypes.create) {
             createBox(newBox)
                 .unwrap()
-                .then(() => setModalSuccess('Workspace created successfully!'))
+                .then(() => {
+                    setModalSuccess('Box created successfully!');
+                    refetchWorkspace();
+                })
                 .catch((err) => setModalError(`Error: ${err.message}`));
         } else if (modalType === actionTypes.edit && selectedWorkspace) {
             updateBox({ id: selectedWorkspace.id, data: newBox })
                 .unwrap()
-                .then(() => setModalSuccess('Workspace updated successfully!'))
+                .then(() => {
+                    setModalSuccess('Box updated successfully!');
+                    refetchWorkspace();
+                })
                 .catch((err) => setModalError(`Error: ${err.message}`));
         } else if (modalType === actionTypes.delete && selectedWorkspace) {
             deleteBox(selectedWorkspace.id)
                 .unwrap()
-                .then(() => setModalSuccess('Workspace deleted successfully!'))
+                .then(() => {
+                    setModalSuccess('Box deleted successfully!');
+                    refetchWorkspace();
+                })
                 .catch((err) => setModalError(`Error: ${err.message}`));
         }
     };
+
+    // Add this function to refetch the workspace data
+    const refetchWorkspace = useCallback(() => {
+        if (workspaceId) {
+            getSingleWorkspace(workspaceId);
+        }
+    }, [workspaceId, getSingleWorkspace]);
 
     useEffect(() => {
         getSingleWorkspace(workspaceId);
