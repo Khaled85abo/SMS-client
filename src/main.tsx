@@ -31,6 +31,7 @@ import {
   useLazyRefreshTokenQuery,
 } from "./redux/features/auth/authApi";
 import Workspace from "./pages/SingleWorkspace";
+import SingleBox from "./pages/Singlebox";
 
 const ProtectedRoutes = () => {
   const location = useLocation();
@@ -90,6 +91,7 @@ function App() {
         <Route path="/about" element={<About />}></Route>
         <Route path="/workspaces" element={<Workspaces />}></Route>
         <Route path="/workspaces/:workspaceId" element={<Workspace />}></Route>
+        <Route path="/workspaces/:workspaceId/:boxId" element={<SingleBox />}></Route>
         <Route element={<ProtectedRoutes />}>
           <Route path="/profile" element={<Profile />}></Route>
           <Route path="/wardrobe" element={<Wardrobe />}></Route>
@@ -111,12 +113,16 @@ function App() {
     </Routes>
   );
 }
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <Provider store={store}>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </Provider>
-  </React.StrictMode>
-);
+
+const rootElement = document.getElementById("root");
+if (rootElement) {
+  ReactDOM.createRoot(rootElement).render(
+    <React.StrictMode>
+      <Provider store={store}>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </Provider>
+    </React.StrictMode>
+  );
+}
