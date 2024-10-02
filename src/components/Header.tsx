@@ -108,7 +108,7 @@ const Menu = () => {
                   <img
                     className="w-8 h-8 rounded-full"
                     src={
-                      `${config.BACKEND_URL}/${user.profile.profile_picture_url}` ||
+                      `${config.BACKEND_URL}/${user.profile?.profile_picture_url}` ||
                       "https://laravelui.spruko.com/tailwind/ynex/build/assets/images/faces/9.jpg"
                     }
                     alt=""
@@ -163,6 +163,14 @@ const Menu = () => {
                     className={({ isActive }) => (isActive ? activeTab : tab)}
                   >
                     Profile
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink
+                    to="/workspaces"
+                    className={({ isActive }) => (isActive ? activeTab : tab)}
+                  >
+                    Workspaces
                   </NavLink>
                 </li>
                 <li>

@@ -233,21 +233,20 @@ const ClothingItemForm: React.FC = () => {
           />
         </div>
 
-        {!isMobile && (
-          <div className="flex space-x-2">
-            <button
-              type="button"
-              onClick={handleCameraClick}
-              className={`px-4 py-2 rounded ${
-                isCameraOn
-                  ? "bg-red-500 hover:bg-red-700"
-                  : "bg-blue-500 hover:bg-blue-700"
+        {/* {!isMobile && ( */}
+        <div className="flex space-x-2">
+          <button
+            type="button"
+            onClick={handleCameraClick}
+            className={`px-4 py-2 rounded ${isCameraOn
+                ? "bg-red-500 hover:bg-red-700"
+                : "bg-blue-500 hover:bg-blue-700"
               } text-white`}
-            >
-              {isCameraOn ? "Close Camera" : "Open Camera"}
-            </button>
-          </div>
-        )}
+          >
+            {isCameraOn ? "Close Camera" : "Open Camera"}
+          </button>
+        </div>
+        {/* )} */}
 
         {isCameraOn && (
           <div className="camera-container space-y-2">

@@ -19,6 +19,7 @@ import { store } from "./redux/store";
 import { useAppSelector } from "./hooks/redux";
 import Wardrobe from "./pages/Wardrobe";
 import AddClothingItem from "./pages/AddClothingItem";
+import Workspaces from "./pages/Workspaces";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import ForgotPassword from "./pages/auth/ForgotPassword";
@@ -33,7 +34,7 @@ import {
 const ProtectedRoutes = () => {
   const location = useLocation();
   const user = useAppSelector((state) => state.auth.user);
-  useEffect(() => {}, [location.pathname]);
+  useEffect(() => { }, [location.pathname]);
 
   if (user) {
     return <Outlet />;
@@ -86,6 +87,7 @@ function App() {
       <Route element={<Layout />}>
         <Route path="/" element={<Landing />}></Route>
         <Route path="/about" element={<About />}></Route>
+        <Route path="/workspaces" element={<Workspaces />}></Route>
         <Route element={<ProtectedRoutes />}>
           <Route path="/profile" element={<Profile />}></Route>
           <Route path="/wardrobe" element={<Wardrobe />}></Route>

@@ -1,6 +1,8 @@
 import { configureStore } from "@reduxjs/toolkit";
 import currencySlice from "./features/currency/currencySlice";
 import { currencyApi } from "./features/currency/currencyApi";
+import workspaceSlice from "./features/workspace/workspaceSlice";
+import { workspaceApi } from "./features/workspace/workspaceApi";
 import themeSlice from "./features/theme/themeSlice";
 import authSlice from "./features/auth/authSlice";
 import { authApi } from "./features/auth/authApi";
@@ -10,11 +12,13 @@ export const store = configureStore({
     currency: currencySlice,
     theme: themeSlice,
     auth: authSlice,
+    workspace: workspaceSlice,
     [currencyApi.reducerPath]: currencyApi.reducer,
     [authApi.reducerPath]: authApi.reducer,
+    [workspaceApi.reducerPath]: workspaceApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(currencyApi.middleware, authApi.middleware),
+    getDefaultMiddleware().concat(currencyApi.middleware, authApi.middleware, workspaceApi.middleware),
 });
 
 // Infer the `RootState` and `AppDispatch` types from the store itself

@@ -7,7 +7,7 @@ const initialState: InitialState = {
 };
 
 export const workspaceSlice = createSlice({
-    name: "auth",
+    name: "workspace",
     initialState,
     reducers: {
         setWorkspaces: (state, action: PayloadAction<any[]>) => {

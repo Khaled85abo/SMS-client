@@ -78,8 +78,8 @@ const VerifyEmail = () => {
           {isLoading
             ? "Sending email"
             : isSuccess
-            ? "Emai has been sent"
-            : "Resend verification email"}
+              ? "Emai has been sent"
+              : "Resend verification email"}
         </button>
         {error && (
           <div className="mt-1 text-xs italic text-red-500 animate-shake">
@@ -122,7 +122,7 @@ const ProfileStatus = () => {
   const [edit, setEdit] = useState(false);
   const [profileData, setProfileData] = useState<Profile>(user?.profile || {});
   const [userImage, setUserImage] = useState(
-    user.profile.profile_picture_url || placeHolder
+    user.profile?.profile_picture_url || placeHolder
   );
   const [updateProfile, { isLoading }] = useUpdateProfileMutation();
   const [refetchUser] = useLazyMeQuery();
@@ -185,7 +185,7 @@ const ProfileStatus = () => {
 
       if ("data" in response) {
         await refetchUser({});
-        setUserImage(response.data.profile_picture_url);
+        setUserImage(response.data?.profile_picture_url || "");
         setShowModal(false);
       }
     }
