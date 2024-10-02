@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLazyGetSingleWorkspaceQuery } from "../redux/features/workspace/workspaceApi";
 import { useCreateBoxMutation, useUpdateBoxMutation, useRemoveBoxMutation } from "../redux/features/box/boxApi";
 import { useParams, Link } from 'react-router-dom';
@@ -66,7 +66,7 @@ const SingleWorkspace = () => {
                 .unwrap()
                 .then(() => {
                     setModalSuccess('Box created successfully!');
-                    refetchWorkspace();
+                    getSingleWorkspace(workspaceId);
                 })
                 .catch((err) => setModalError(`Error: ${err.message}`));
         } else if (modalType === actionTypes.edit && selectedWorkspace) {
@@ -74,7 +74,7 @@ const SingleWorkspace = () => {
                 .unwrap()
                 .then(() => {
                     setModalSuccess('Box updated successfully!');
-                    refetchWorkspace();
+                    getSingleWorkspace(workspaceId);
                 })
                 .catch((err) => setModalError(`Error: ${err.message}`));
         } else if (modalType === actionTypes.delete && selectedWorkspace) {
@@ -82,18 +82,18 @@ const SingleWorkspace = () => {
                 .unwrap()
                 .then(() => {
                     setModalSuccess('Box deleted successfully!');
-                    refetchWorkspace();
+                    getSingleWorkspace(workspaceId);
                 })
                 .catch((err) => setModalError(`Error: ${err.message}`));
         }
     };
 
-    // Add this function to refetch the workspace data
-    const refetchWorkspace = useCallback(() => {
-        if (workspaceId) {
-            getSingleWorkspace(workspaceId);
-        }
-    }, [workspaceId, getSingleWorkspace]);
+    // // Add this function to refetch the workspace data
+    // const refetchWorkspace = useCallback(() => {
+    //     if (workspaceId) {
+    //         getSingleWorkspace(workspaceId);
+    //     }
+    // }, [workspaceId, getSingleWorkspace]);
 
     useEffect(() => {
         getSingleWorkspace(workspaceId);
