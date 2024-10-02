@@ -11,7 +11,7 @@ const actionTypes = {
 type ActionType = typeof actionTypes[keyof typeof actionTypes];
 
 type Box = {
-    id: string;
+    id: number;
     name: string;
     description: string;
     items: any[];
@@ -27,14 +27,14 @@ const SingleWorkspace = () => {
     const [deleteBox, { isLoading: isDeleting }] = useRemoveBoxMutation();
     const [modalOpen, setModalOpen] = useState(false);
     const [modalType, setModalType] = useState<ActionType | null>(null);
-    const [selectedWorkspace, setSelectedWorkspace] = useState<Box | null>(null);
+    const [selectedBox, setSelectedBox] = useState<Box | null>(null);
     const [newBox, setNewBox] = useState({ name: '', description: '', work_space_id: workspaceId });
     const [modalError, setModalError] = useState<string | null>(null);
     const [modalSuccess, setModalSuccess] = useState<string | null>(null);
 
     const openModal = (type: ActionType, box: Box | null = null) => {
         setModalType(type);
-        setSelectedWorkspace(box);
+        setSelectedBox(box);
         setModalOpen(true);
         // Reset the error and success states
         setModalError(null);
@@ -50,7 +50,7 @@ const SingleWorkspace = () => {
     const closeModal = () => {
         setModalOpen(false);
         setModalType(null);
-        setSelectedWorkspace(null);
+        setSelectedBox(null);
         setNewBox({ name: '', description: '', work_space_id: workspaceId });
     };
 
@@ -69,16 +69,16 @@ const SingleWorkspace = () => {
                     getSingleWorkspace(workspaceId);
                 })
                 .catch((err) => setModalError(`Error: ${err.message}`));
-        } else if (modalType === actionTypes.edit && selectedWorkspace) {
-            updateBox({ id: selectedWorkspace.id, data: newBox })
+        } else if (modalType === actionTypes.edit && selectedBox) {
+            updateBox({ id: selectedBox.id, data: newBox })
                 .unwrap()
                 .then(() => {
                     setModalSuccess('Box updated successfully!');
                     getSingleWorkspace(workspaceId);
                 })
                 .catch((err) => setModalError(`Error: ${err.message}`));
-        } else if (modalType === actionTypes.delete && selectedWorkspace) {
-            deleteBox(selectedWorkspace.id)
+        } else if (modalType === actionTypes.delete && selectedBox) {
+            deleteBox(selectedBox.id)
                 .unwrap()
                 .then(() => {
                     setModalSuccess('Box deleted successfully!');
@@ -101,6 +101,7 @@ const SingleWorkspace = () => {
 
     return (
         <div>
+            <h3 className='m-4 text-xl font-bold'><Link to="/workspaces" className='text-blue-500'>Workspaces</Link> / {singleWorkspace?.name}</h3>
             <h1 className='mt-4 ml-4 text-2xl font-bold'>Boxes of {singleWorkspace?.name}</h1>
             <div className="flex justify-between items-center p-4 mb-4">
                 <h1 className="text-xl font-bold">Boxes</h1>
@@ -168,7 +169,7 @@ const SingleWorkspace = () => {
                                 </div>
                             </form>
                         ) : (
-                            <p>Are you sure you want to delete: {selectedWorkspace?.name}?</p>
+                            <p>Are you sure you want to delete: {selectedBox?.name}?</p>
                         )}
                         <div className="mt-4">
                             <button
