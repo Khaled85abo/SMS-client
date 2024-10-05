@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useLazyGetSingleWorkspaceQuery } from "../redux/features/workspace/workspaceApi";
 import { useCreateBoxMutation, useUpdateBoxMutation, useRemoveBoxMutation } from "../redux/features/box/boxApi";
-import { useOCRMutation } from "../redux/features/detect/detectApi";
 import { useParams, Link } from 'react-router-dom';
+import CameraButton from '../components/CameraButton';
 
 const actionTypes = {
     create: 'create',
@@ -23,7 +23,6 @@ type Box = {
 const SingleWorkspace = () => {
     const { workspaceId } = useParams();
     const [getSingleWorkspace, { data: singleWorkspace, isLoading, isSuccess }] = useLazyGetSingleWorkspaceQuery({});
-    const [ocr, { isLoading: isOCR, data: ocrData, isSuccess: isOCRSuccess, error: ocrError }] = useOCRMutation();
     const [createBox, { isLoading: isCreating }] = useCreateBoxMutation();
     const [updateBox, { isLoading: isUpdating }] = useUpdateBoxMutation();
     const [deleteBox, { isLoading: isDeleting }] = useRemoveBoxMutation();
@@ -105,14 +104,20 @@ const SingleWorkspace = () => {
         <div>
             <h3 className='m-4 text-xl font-bold'><Link to="/workspaces" className='text-blue-500'>Workspaces</Link> / {singleWorkspace?.name}</h3>
             <h1 className='mt-4 ml-4 text-2xl font-bold'>Boxes of {singleWorkspace?.name}</h1>
+            <div className=" p-4">
+
+                <CameraButton />
+            </div>
             <div className="flex justify-between items-center p-4 mb-4">
                 <h1 className="text-xl font-bold">Boxes</h1>
-                <button
-                    className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                    onClick={() => openModal(actionTypes.create)}
-                >
-                    Add New Box
-                </button>
+                <div>
+                    <button
+                        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                        onClick={() => openModal(actionTypes.create)}
+                    >
+                        Add New Box
+                    </button>
+                </div>
             </div>
             {isLoading && <p>Loading...</p>}
             {isSuccess && singleWorkspace.boxes.map((box: Box) => (
