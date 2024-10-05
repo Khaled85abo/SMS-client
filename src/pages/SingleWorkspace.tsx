@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLazyGetSingleWorkspaceQuery } from "../redux/features/workspace/workspaceApi";
 import { useCreateBoxMutation, useUpdateBoxMutation, useRemoveBoxMutation } from "../redux/features/box/boxApi";
+import { useOCRMutation } from "../redux/features/detect/detectApi";
 import { useParams, Link } from 'react-router-dom';
 
 const actionTypes = {
@@ -22,6 +23,7 @@ type Box = {
 const SingleWorkspace = () => {
     const { workspaceId } = useParams();
     const [getSingleWorkspace, { data: singleWorkspace, isLoading, isSuccess }] = useLazyGetSingleWorkspaceQuery({});
+    const [ocr, { isLoading: isOCR, data: ocrData, isSuccess: isOCRSuccess, error: ocrError }] = useOCRMutation();
     const [createBox, { isLoading: isCreating }] = useCreateBoxMutation();
     const [updateBox, { isLoading: isUpdating }] = useUpdateBoxMutation();
     const [deleteBox, { isLoading: isDeleting }] = useRemoveBoxMutation();
