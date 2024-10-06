@@ -52,7 +52,7 @@ export const detectApi = createApi({
                 body: newItemData,
             }),
         }),
-        classify_img: builder.mutation({
+        classify: builder.mutation({
             query: (newItemData) => ({
                 url: "/classify",
                 method: "POST",
@@ -70,7 +70,7 @@ export const {
     useOCR_lightMutation,
     useDetect8n_imgMutation,
     useDetect8x_imgMutation,
-    useClassify_imgMutation,
+    useClassifyMutation,
 } = detectApi;
 
 

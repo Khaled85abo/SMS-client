@@ -3,6 +3,7 @@ import { useCreateItemMutation, useUpdateItemMutation, useRemoveItemMutation } f
 import { useLazyGetSingleBoxQuery } from "../redux/features/box/boxApi";
 import { useLazyGetSingleWorkspaceQuery } from "../redux/features/workspace/workspaceApi";
 import { useParams, Link } from 'react-router-dom';
+import ItemsClassifier from '../components/ItemsClassifier';
 
 const actionTypes = {
     create: 'create',
@@ -117,8 +118,12 @@ const SingleBox = () => {
 
     return (
         <div>
-            <h3 className='m-4 text-xl font-bold'><Link to="/workspaces" className='text-blue-500'>Workspaces</Link> / <Link to={`/workspaces/${workspaceId}`} className='text-blue-500'>{singleWorkspace?.name}</Link></h3>
+            <h3 className='m-4 text-xl font-bold'><Link to="/workspaces" className='text-blue-500'>Workspaces</Link> / <Link to={`/workspaces/${workspaceId}`} className='text-blue-500'>{singleWorkspace?.name}</Link> / {singleBox?.name}</h3>
             <h1 className='mt-4 ml-4 text-2xl font-semibold '>Items of {singleBox?.name}</h1>
+            <div className=" p-4">
+
+                <ItemsClassifier box={singleBox} getSingleBox={getSingleBox} />
+            </div>
             <div className="flex justify-between items-center p-4 mb-4">
                 <h1 className="text-xl font-semibold">Items</h1>
                 <button
@@ -132,7 +137,7 @@ const SingleBox = () => {
             {isSuccess && singleBox.items.map((item: Item) => (
                 <div key={item.id} className="bg-white shadow-md rounded-lg p-4 mb-4">
                     <div className="flex justify-between items-center">
-                        <Link to={`/workspaces/${singleWorkspace.id}/${item.id}`}>
+                        <Link to={`/workspaces/${workspaceId}/${singleBox.id}/${item.id}`}>
                             <h2 className="text-xl font-semibold">{item.name}</h2>
                         </Link>
                         <div>

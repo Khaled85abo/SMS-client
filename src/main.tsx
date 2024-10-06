@@ -32,6 +32,7 @@ import {
 } from "./redux/features/auth/authApi";
 import Workspace from "./pages/SingleWorkspace";
 import SingleBox from "./pages/Singlebox";
+import Item from "./pages/Item";
 
 const ProtectedRoutes = () => {
   const location = useLocation();
@@ -93,6 +94,7 @@ function App() {
           <Route path="/workspaces" element={<Workspaces />}></Route>
           <Route path="/workspaces/:workspaceId" element={<Workspace />}></Route>
           <Route path="/workspaces/:workspaceId/:boxId" element={<SingleBox />}></Route>
+          <Route path="/workspaces/:workspaceId/:boxId/:itemId" element={<Item />}></Route>
           <Route path="/profile" element={<Profile />}></Route>
           <Route path="/wardrobe" element={<Wardrobe />}></Route>
           <Route
