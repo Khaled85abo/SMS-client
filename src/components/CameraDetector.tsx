@@ -21,15 +21,17 @@ const CameraDetector: React.FC<CameraDetectorProps> = ({ workspace, getSingleWor
     const streamRef = useRef<MediaStream | null>(null);
 
     useEffect(() => {
-        // let intervalId: NodeJS.Timeout;
         let intervalId: number;
 
         const startVideo = async () => {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' }
+                });
                 streamRef.current = stream;
                 if (videoRef.current) {
                     videoRef.current.srcObject = stream;
+                    videoRef.current.play();
                 }
             } catch (err) {
                 console.error("Error accessing camera:", err);
@@ -47,7 +49,10 @@ const CameraDetector: React.FC<CameraDetectorProps> = ({ workspace, getSingleWor
             if (videoRef.current && canvasRef.current) {
                 const context = canvasRef.current.getContext('2d');
                 if (context) {
-                    context.drawImage(videoRef.current, 0, 0, 250, 250);
+                    const { videoWidth, videoHeight } = videoRef.current;
+                    canvasRef.current.width = videoWidth;
+                    canvasRef.current.height = videoHeight;
+                    context.drawImage(videoRef.current, 0, 0, videoWidth, videoHeight);
                     const imageDataUrl = canvasRef.current.toDataURL('image/jpeg');
                     setCapturedImage(imageDataUrl);
 
@@ -87,7 +92,6 @@ const CameraDetector: React.FC<CameraDetectorProps> = ({ workspace, getSingleWor
         setAccumulatedResults([]);
     };
 
-
     const createBox = (box: string) => {
         addBox({ name: box, work_space_id: workspace.id, description: '' }).then((result) => {
             if ('data' in result) {
@@ -118,8 +122,17 @@ const CameraDetector: React.FC<CameraDetectorProps> = ({ workspace, getSingleWor
             </div>
             {isCapturing && (
                 <div className="camera-feed">
-                    <video ref={videoRef} autoPlay playsInline muted style={{ width: '250px', height: '250px' }} />
-                    <canvas ref={canvasRef} width={250} height={250} style={{ display: 'none' }} />
+                    <video
+                        ref={videoRef}
+                        autoPlay
+                        playsInline
+                        muted
+                        style={{ width: '100%', maxWidth: '400px', height: 'auto' }}
+                    />
+                    <canvas
+                        ref={canvasRef}
+                        style={{ display: 'none', width: '100%', maxWidth: '400px', height: 'auto' }}
+                    />
                 </div>
             )}
             {/* {capturedImage && (
