@@ -89,10 +89,10 @@ function App() {
       <Route element={<Layout />}>
         <Route path="/" element={<Landing />}></Route>
         <Route path="/about" element={<About />}></Route>
-        <Route path="/workspaces" element={<Workspaces />}></Route>
-        <Route path="/workspaces/:workspaceId" element={<Workspace />}></Route>
-        <Route path="/workspaces/:workspaceId/:boxId" element={<SingleBox />}></Route>
         <Route element={<ProtectedRoutes />}>
+          <Route path="/workspaces" element={<Workspaces />}></Route>
+          <Route path="/workspaces/:workspaceId" element={<Workspace />}></Route>
+          <Route path="/workspaces/:workspaceId/:boxId" element={<SingleBox />}></Route>
           <Route path="/profile" element={<Profile />}></Route>
           <Route path="/wardrobe" element={<Wardrobe />}></Route>
           <Route

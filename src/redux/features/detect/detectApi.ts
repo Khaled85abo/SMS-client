@@ -24,6 +24,13 @@ export const detectApi = createApi({
                 body: image,
             }),
         }),
+        detect_boxes_names: builder.mutation({
+            query: (image) => ({
+                url: "/detect-box-name",
+                method: "POST",
+                body: image,
+            }),
+        }),
         OCR_light: builder.mutation({
             query: (image) => ({
                 url: "/ocr-light",
@@ -58,6 +65,7 @@ export const detectApi = createApi({
 });
 
 export const {
+    useDetect_boxes_namesMutation,
     useOCRMutation,
     useOCR_lightMutation,
     useDetect8n_imgMutation,

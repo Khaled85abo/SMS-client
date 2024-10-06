@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useLazyGetSingleWorkspaceQuery } from "../redux/features/workspace/workspaceApi";
 import { useCreateBoxMutation, useUpdateBoxMutation, useRemoveBoxMutation } from "../redux/features/box/boxApi";
 import { useParams, Link } from 'react-router-dom';
-import CameraButton from '../components/CameraButton';
+import CameraDetector from '../components/CameraDetector';
 
 const actionTypes = {
     create: 'create',
@@ -60,7 +60,8 @@ const SingleWorkspace = () => {
         setNewBox(prev => ({ ...prev, [name]: value }));
     };
 
-    const submitModal = () => {
+    const submitModal = (e: React.FormEvent<HTMLFormElement> | React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault();
         console.log(newBox);
         if (modalType === actionTypes.create) {
             createBox(newBox)
@@ -89,6 +90,8 @@ const SingleWorkspace = () => {
         }
     };
 
+
+
     // // Add this function to refetch the workspace data
     // const refetchWorkspace = useCallback(() => {
     //     if (workspaceId) {
@@ -106,7 +109,7 @@ const SingleWorkspace = () => {
             <h1 className='mt-4 ml-4 text-2xl font-bold'>Boxes of {singleWorkspace?.name}</h1>
             <div className=" p-4">
 
-                <CameraButton />
+                <CameraDetector workspace={singleWorkspace} getSingleWorkspace={getSingleWorkspace} />
             </div>
             <div className="flex justify-between items-center p-4 mb-4">
                 <h1 className="text-xl font-bold">Boxes</h1>
@@ -154,7 +157,7 @@ const SingleWorkspace = () => {
                                 modalType === 'edit' ? 'Edit Workspace' : 'Delete Workspace'}
                         </h3>
                         {modalType !== 'delete' ? (
-                            <form>
+                            <form onSubmit={(e) => submitModal(e)}>
                                 <div className="mt-2">
                                     <label className="block text-sm font-medium text-gray-700">Name</label>
                                     <input
