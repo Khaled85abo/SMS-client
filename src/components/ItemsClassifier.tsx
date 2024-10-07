@@ -3,6 +3,8 @@ import { useClassifyMutation } from "../redux/features/detect/detectApi";
 import { useCreateItemMutation } from "../redux/features/item/itemApi";
 import { Box, Workspace } from '../types/workspace';
 import { Link } from 'react-router-dom';
+import Modal from '../components/Modal'; // You'll need to create this component
+import ImageSlider from '../components/ImageSlider'; // You'll need to create this component
 
 type CameraDetectorProps = {
     box: Box;
@@ -20,6 +22,8 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSin
     const [classify, { isLoading, isError, error }] = useClassifyMutation();
     const [accumulatedResults, setAccumulatedResults] = useState<{ name: string, imgs: string[] }[]>([]);
     const streamRef = useRef<MediaStream | null>(null);
+    const [selectedItem, setSelectedItem] = useState<{ name: string, imgs: string[] } | null>(null);
+    const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
     useEffect(() => {
         let intervalId: number;
@@ -114,6 +118,27 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSin
         })
     }
 
+    const handleItemClick = (item: { name: string, imgs: string[] }) => {
+        setSelectedItem(item);
+    };
+
+    const handleCloseModal = () => {
+        setSelectedItem(null);
+    };
+
+    const handleCreateItem = (name: string, description: string) => {
+        createItem({ name, description });
+        handleCloseModal();
+    };
+
+    const handleImageSelect = (index: number) => {
+        setSelectedImageIndex(index);
+        const imageElement = document.getElementById(`item-image-${index}`);
+        if (imageElement) {
+            imageElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    };
+
     return (
         <div className="camera-button-container">
             <div className="button-container">
@@ -157,20 +182,26 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSin
             {accumulatedResults.length > 0 && <div className="ocr-result mt-4">
                 <h3 className="font-bold">OCR Results:</h3>
                 {accumulatedResults.length > 0 && (
-                    <div className="bg-gray-100 p-2 rounded mt-2 overflow-auto max-h-40">
-                        {accumulatedResults.map(item => <div key={item.name} className="flex justify-between items-center mb-2">
-                            <div className="flex items-center gap-2">
-                                <p className="font-bold">{item.name}</p>
-                                {item.imgs.map(img => <img src={`data:image/png;base64,${img}`} alt={item.name} className="w-14 h-14 object-cover" />)}
+                    <div className="bg-gray-100 p-2 rounded mt-2 overflow-auto max-h-60">
+                        {accumulatedResults.map(item => (
+                            <div key={item.name} className="flex flex-col mb-4">
+                                <div className="flex justify-between items-center mb-2">
+                                    <p className="font-bold cursor-pointer" onClick={() => handleItemClick(item)}>{item.name}</p>
+                                    {box.items.find(b => b.name === item.name) ?
+                                        <Link to={`/workspaces/${workspace.id}/${box.id}/${box.items.find(b => b.name === item.name)?.id}`}>
+                                            <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Review</button>
+                                        </Link>
+                                        :
+                                        <button onClick={() => handleItemClick(item)} className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Add</button>
+                                    }
+                                </div>
+                                <div className="overflow-x-auto whitespace-nowrap">
+                                    {item.imgs.map((img, index) => (
+                                        <img key={index} src={`data:image/png;base64,${img}`} alt={item.name} className="w-14 h-14 object-cover inline-block mr-2" />
+                                    ))}
+                                </div>
                             </div>
-                            {box.items.find(b => b.name === item.name) ?
-                                <Link to={`/workspaces/${workspace.id}/${box.id}/${box.items.find(b => b.name === item.name)?.id}`}>
-                                    <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Review</button>
-                                </Link>
-                                :
-                                <button onClick={() => createItem({ name: item.name, description: '' })} className="bg-green-500 text-white px-4 rounded hover:bg-green-600">Add</button>
-                            }
-                        </div>)}
+                        ))}
                     </div>
                 )}
                 {successAddingItem && <p>Successfully added {successAddingItem}</p>}
@@ -179,6 +210,50 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSin
                 {isError && <p>Error: {(error as any)?.data?.message || 'An error occurred'}</p>}
                 {isLoading && <p>Processing...</p>}
             </div>}
+            {selectedItem && (
+                <Modal onClose={handleCloseModal}>
+                    <div className="bg-white p-6 rounded-lg">
+                        <h2 className="text-2xl font-bold mb-4">{selectedItem.name}</h2>
+                        <div className="mb-4">
+                            <ImageSlider images={selectedItem.imgs} selectedIndex={selectedImageIndex} onImageChange={handleImageSelect} />
+                            {selectedItem.imgs.length > 1 && (
+                                <div className="flex justify-center mt-2">
+                                    {selectedItem.imgs.map((img, index) => (
+                                        <label key={index} className="mx-2">
+                                            <input
+                                                type="radio"
+                                                name="selectedImage"
+                                                value={index}
+                                                checked={selectedImageIndex === index}
+                                                onChange={() => handleImageSelect(index)}
+                                                className="mr-1"
+                                            />
+                                            {/* Image {index + 1} */}
+                                        </label>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <form onSubmit={(e) => {
+                            e.preventDefault();
+                            const form = e.target as HTMLFormElement;
+                            const name = (form.elements.namedItem('name') as HTMLInputElement).value;
+                            const description = (form.elements.namedItem('description') as HTMLTextAreaElement).value;
+                            handleCreateItem(name, description);
+                        }}>
+                            <div className="mb-4">
+                                <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
+                                <input type="text" id="name" name="name" defaultValue={selectedItem.name} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" required />
+                            </div>
+                            <div className="mb-4">
+                                <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
+                                <textarea id="description" name="description" rows={3} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"></textarea>
+                            </div>
+                            <button type="submit" className="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Add Item</button>
+                        </form>
+                    </div>
+                </Modal>
+            )}
         </div>
     );
 };
