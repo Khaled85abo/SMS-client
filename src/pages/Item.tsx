@@ -3,6 +3,7 @@ import { useLazyGetSingleBoxQuery } from "../redux/features/box/boxApi";
 import { useLazyGetSingleWorkspaceQuery } from "../redux/features/workspace/workspaceApi";
 import { useLazyGetSingleItemQuery } from "../redux/features/item/itemApi";
 import { useEffect } from "react";
+import appConfig from "../config";
 
 const Item = () => {
     const { itemId, boxId, workspaceId } = useParams();
@@ -31,7 +32,7 @@ const Item = () => {
                     <div className="relative h-48">
                         <img
                             className="w-full h-full object-cover"
-                            src={item?.imageUrl || 'https://via.placeholder.com/400x200'}
+                            src={`${appConfig.BACKEND_URL}/${item?.images[0].url}` || 'https://via.placeholder.com/400x200'}
                             alt={item?.name}
                         />
                         <button className="absolute bottom-2 right-2 bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 text-sm">
