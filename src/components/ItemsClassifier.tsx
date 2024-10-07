@@ -17,8 +17,8 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSin
     const [capturedImage, setCapturedImage] = useState<string | null>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [classify, { data: classifyResult, isLoading, isError, error }] = useClassifyMutation();
-    const [accumulatedResults, setAccumulatedResults] = useState<string[]>([]);
+    const [classify, { isLoading, isError, error }] = useClassifyMutation();
+    const [accumulatedResults, setAccumulatedResults] = useState<{ name: string, imgs: string[] }[]>([]);
     const streamRef = useRef<MediaStream | null>(null);
 
     useEffect(() => {
@@ -63,10 +63,22 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSin
                             formData.append('file', blob, 'capture.jpg');
                             classify(formData).then((result) => {
                                 if ('data' in result && result.data?.items) {
-                                    const items = Object.keys(result.data.items);
-                                    setAccumulatedResults(prev => {
-                                        const allItems = [...prev, ...items];
-                                        return [...new Set(allItems)];
+                                    const items = Object.entries(result.data.items).map(([name, values]) => ({ name, imgs: values?.images }));
+                                    setAccumulatedResults(prevResults => {
+                                        const updatedResults = [...prevResults];
+                                        items.forEach(item => {
+                                            const existingItemIndex = updatedResults.findIndex(r => r.name === item.name);
+                                            if (existingItemIndex !== -1) {
+                                                // Item exists, add new images
+                                                updatedResults[existingItemIndex].imgs = [
+                                                    ...new Set([...updatedResults[existingItemIndex].imgs, ...item.imgs])
+                                                ];
+                                            } else {
+                                                // New item, add to results
+                                                updatedResults.push(item);
+                                            }
+                                        });
+                                        return updatedResults;
                                     });
                                 }
                             });
@@ -146,14 +158,17 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSin
                 <h3 className="font-bold">OCR Results:</h3>
                 {accumulatedResults.length > 0 && (
                     <div className="bg-gray-100 p-2 rounded mt-2 overflow-auto max-h-40">
-                        {accumulatedResults.map(item => <div key={item} className="flex justify-between items-center mb-2">
-                            <p>{item}</p>
-                            {box.items.find(b => b.name === item) ?
-                                <Link to={`/workspaces/${workspace.id}/${box.id}/${box.items.find(b => b.name === item)?.id}`}>
+                        {accumulatedResults.map(item => <div key={item.name} className="flex justify-between items-center mb-2">
+                            <div className="flex items-center gap-2">
+                                <p className="font-bold">{item.name}</p>
+                                {item.imgs.map(img => <img src={`data:image/png;base64,${img}`} alt={item.name} className="w-14 h-14 object-cover" />)}
+                            </div>
+                            {box.items.find(b => b.name === item.name) ?
+                                <Link to={`/workspaces/${workspace.id}/${box.id}/${box.items.find(b => b.name === item.name)?.id}`}>
                                     <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Review</button>
                                 </Link>
                                 :
-                                <button onClick={() => createItem({ name: item, description: '' })} className="bg-green-500 text-white px-4 rounded hover:bg-green-600">Add</button>
+                                <button onClick={() => createItem({ name: item.name, description: '' })} className="bg-green-500 text-white px-4 rounded hover:bg-green-600">Add</button>
                             }
                         </div>)}
                     </div>
