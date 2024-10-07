@@ -124,6 +124,7 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSin
 
     const handleCloseModal = () => {
         setSelectedItem(null);
+        setSelectedImageIndex(0);
     };
 
     const handleCreateItem = (name: string, description: string) => {
@@ -217,7 +218,7 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSin
                         <div className="mb-4">
                             <ImageSlider images={selectedItem.imgs} selectedIndex={selectedImageIndex} onImageChange={handleImageSelect} />
                             {selectedItem.imgs.length > 1 && (
-                                <div className="flex justify-center mt-2">
+                                <div className="flex justify-center mt-2 flex-wrap">
                                     {selectedItem.imgs.map((img, index) => (
                                         <label key={index} className="mx-2">
                                             <input
