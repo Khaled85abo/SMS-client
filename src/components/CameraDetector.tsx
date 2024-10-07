@@ -111,7 +111,7 @@ const CameraDetector: React.FC<CameraDetectorProps> = ({ workspace, getSingleWor
                         setIsCapturing(prev => !prev)
                     }}
                 >
-                    {isCapturing ? 'Stop Scanning' : 'Start Scanning'}
+                    {isCapturing ? 'Stop Scanning' : 'Scan boxes'}
                 </button>
                 {accumulatedResults.length > 0 && <button
                     className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"

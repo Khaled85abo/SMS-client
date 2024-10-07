@@ -1,14 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useClassifyMutation } from "../redux/features/detect/detectApi";
 import { useCreateItemMutation } from "../redux/features/item/itemApi";
-import { Box } from '../types/workspace';
+import { Box, Workspace } from '../types/workspace';
+import { Link } from 'react-router-dom';
 
 type CameraDetectorProps = {
     box: Box;
+    workspace: Workspace;
     getSingleBox: (id: number) => void;
 }
 
-const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, getSingleBox }: CameraDetectorProps) => {
+const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSingleBox }: CameraDetectorProps) => {
     const [addItem, { isLoading: isAddingItem, isError: isAddingItemError, error: addingItemError }] = useCreateItemMutation();
     const [successAddingItem, setSuccessAddingItem] = useState<string | null>(null);
     const [isCapturing, setIsCapturing] = useState(false);
@@ -60,11 +62,11 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, getSingleBox }: C
                             const formData = new FormData();
                             formData.append('file', blob, 'capture.jpg');
                             classify(formData).then((result) => {
-                                if ('data' in result && result.data?.boxes) {
-                                    const boxes = Object.keys(result.data.boxes);
+                                if ('data' in result && result.data?.items) {
+                                    const items = Object.keys(result.data.items);
                                     setAccumulatedResults(prev => {
-                                        const allBoxes = [...prev, ...boxes];
-                                        return [...new Set(allBoxes)];
+                                        const allItems = [...prev, ...items];
+                                        return [...new Set(allItems)];
                                     });
                                 }
                             });
@@ -92,7 +94,7 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, getSingleBox }: C
     };
 
     const createItem = (item: { name: string, description: string }) => {
-        addItem({ ...item, box_id: box.id }).then((result) => {
+        addItem({ ...item, box_id: box.id, quantity: 1 }).then((result) => {
             if ('data' in result) {
                 setSuccessAddingItem(item.name);
                 getSingleBox(box.id);
@@ -110,7 +112,7 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, getSingleBox }: C
                         setIsCapturing(prev => !prev)
                     }}
                 >
-                    {isCapturing ? 'Stop Scanning' : 'Start Scanning'}
+                    {isCapturing ? 'Stop Scanning' : 'Scan items'}
                 </button>
                 {accumulatedResults.length > 0 && <button
                     className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
@@ -144,19 +146,21 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, getSingleBox }: C
                 <h3 className="font-bold">OCR Results:</h3>
                 {accumulatedResults.length > 0 && (
                     <div className="bg-gray-100 p-2 rounded mt-2 overflow-auto max-h-40">
-                        {accumulatedResults.map(box => <div key={box} className="flex justify-between items-center mb-2">
-                            <p>{box}</p>
-                            {box.items.name.find(b => b.name === box) ?
-                                <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Review</button>
+                        {accumulatedResults.map(item => <div key={item} className="flex justify-between items-center mb-2">
+                            <p>{item}</p>
+                            {box.items.find(b => b.name === item) ?
+                                <Link to={`/workspaces/${workspace.id}/${box.id}/${box.items.find(b => b.name === item)?.id}`}>
+                                    <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Review</button>
+                                </Link>
                                 :
-                                <button onClick={() => createItem({ name: box, description: '' })} className="bg-green-500 text-white px-4 rounded hover:bg-green-600">Add</button>
+                                <button onClick={() => createItem({ name: item, description: '' })} className="bg-green-500 text-white px-4 rounded hover:bg-green-600">Add</button>
                             }
                         </div>)}
                     </div>
                 )}
-                {successAddingBox && <p>Successfully added {successAddingBox}</p>}
-                {isAddingBoxError && <p>Error: {(addingBoxError as any)?.data?.message || 'An error occurred'}</p>}
-                {isAddingBox && <p>Adding box...</p>}
+                {successAddingItem && <p>Successfully added {successAddingItem}</p>}
+                {isAddingItemError && <p>Error: {(addingItemError as any)?.data?.message || 'An error occurred'}</p>}
+                {isAddingItem && <p>Adding box...</p>}
                 {isError && <p>Error: {(error as any)?.data?.message || 'An error occurred'}</p>}
                 {isLoading && <p>Processing...</p>}
             </div>}

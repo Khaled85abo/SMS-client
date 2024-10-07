@@ -14,7 +14,6 @@ const Item = () => {
         getItem(itemId);
         getSingleBox(boxId);
         getSingleWorkspace(workspaceId);
-
     }, [boxId, workspaceId]);
     return (
         <div>

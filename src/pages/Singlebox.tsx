@@ -122,7 +122,7 @@ const SingleBox = () => {
             <h1 className='mt-4 ml-4 text-2xl font-semibold '>Items of {singleBox?.name}</h1>
             <div className=" p-4">
 
-                <ItemsClassifier box={singleBox} getSingleBox={getSingleBox} />
+                <ItemsClassifier box={singleBox} getSingleBox={getSingleBox} workspace={singleWorkspace} />
             </div>
             <div className="flex justify-between items-center p-4 mb-4">
                 <h1 className="text-xl font-semibold">Items</h1>
