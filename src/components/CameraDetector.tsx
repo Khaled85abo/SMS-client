@@ -49,11 +49,29 @@ const CameraDetector: React.FC<CameraDetectorProps> = ({ workspace, getSingleWor
             if (videoRef.current && canvasRef.current) {
                 const context = canvasRef.current.getContext('2d');
                 if (context) {
+                    // const { videoWidth, videoHeight } = videoRef.current;
+                    // canvasRef.current.width = videoWidth;
+                    // canvasRef.current.height = videoHeight;
+                    // context.drawImage(videoRef.current, 0, 0, videoWidth, videoHeight);
+                    // const imageDataUrl = canvasRef.current.toDataURL('image/jpeg');
+                    // setCapturedImage(imageDataUrl);
+                    // Access the original video dimensions
                     const { videoWidth, videoHeight } = videoRef.current;
-                    canvasRef.current.width = videoWidth;
-                    canvasRef.current.height = videoHeight;
-                    context.drawImage(videoRef.current, 0, 0, videoWidth, videoHeight);
+
+                    // Calculate scale factor to fit the image within 250x250 while maintaining aspect ratio
+                    const scale = Math.min(250 / videoWidth, 250 / videoHeight);
+
+                    // Set the canvas size based on the scale factor
+                    canvasRef.current.width = videoWidth * scale;
+                    canvasRef.current.height = videoHeight * scale;
+
+                    // Draw the video frame to the canvas, scaling it down
+                    context.drawImage(videoRef.current, 0, 0, videoWidth * scale, videoHeight * scale);
+
+                    // Convert canvas to a JPEG URL
                     const imageDataUrl = canvasRef.current.toDataURL('image/jpeg');
+
+                    // Store the scaled image data URL
                     setCapturedImage(imageDataUrl);
 
                     canvasRef.current.toBlob((blob) => {

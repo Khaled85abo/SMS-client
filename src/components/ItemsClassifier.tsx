@@ -54,11 +54,29 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSin
             if (videoRef.current && canvasRef.current) {
                 const context = canvasRef.current.getContext('2d');
                 if (context) {
+                    // const { videoWidth, videoHeight } = videoRef.current;
+                    // canvasRef.current.width = videoWidth;
+                    // canvasRef.current.height = videoHeight;
+                    // context.drawImage(videoRef.current, 0, 0, videoWidth, videoHeight);
+                    // const imageDataUrl = canvasRef.current.toDataURL('image/jpeg');
+                    // setCapturedImage(imageDataUrl);
+                    // Access the original video dimensions
                     const { videoWidth, videoHeight } = videoRef.current;
-                    canvasRef.current.width = videoWidth;
-                    canvasRef.current.height = videoHeight;
-                    context.drawImage(videoRef.current, 0, 0, videoWidth, videoHeight);
+
+                    // Calculate scale factor to fit the image within 250x250 while maintaining aspect ratio
+                    const scale = Math.min(1200 / videoWidth, 1200 / videoHeight);
+
+                    // Set the canvas size based on the scale factor
+                    canvasRef.current.width = videoWidth * scale;
+                    canvasRef.current.height = videoHeight * scale;
+
+                    // Draw the video frame to the canvas, scaling it down
+                    context.drawImage(videoRef.current, 0, 0, videoWidth * scale, videoHeight * scale);
+
+                    // Convert canvas to a JPEG URL
                     const imageDataUrl = canvasRef.current.toDataURL('image/jpeg');
+
+                    // Store the scaled image data URL
                     setCapturedImage(imageDataUrl);
 
                     canvasRef.current.toBlob((blob) => {
@@ -110,9 +128,17 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSin
     };
 
     const createItem = (item: { name: string, description: string }) => {
-        addItem({ ...item, box_id: box.id, quantity: 1 }).then((result) => {
+        let newItem: { box_id: number; quantity: number; name: string; description: string; image?: string } = { ...item, box_id: box.id, quantity: 1 }
+        const image = selectedItem?.imgs[selectedImageIndex] || null;
+        if (image) {
+            // Remove the data URL prefix if it exists
+            // const base64Data = image.split(',')[1] || image;
+            // newItem = { ...newItem, image: base64Data }
+            newItem = { ...newItem, image: image }
+        }
+        addItem(newItem).then((result) => {
             if ('data' in result) {
-                setSuccessAddingItem(item.name);
+                setSuccessAddingItem(newItem.name);
                 getSingleBox(box.id);
             }
         })
