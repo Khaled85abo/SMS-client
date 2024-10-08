@@ -17,6 +17,7 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSin
     const [successAddingItem, setSuccessAddingItem] = useState<string | null>(null);
     const [isCapturing, setIsCapturing] = useState(false);
     const [capturedImage, setCapturedImage] = useState<string | null>(null);
+    const [capturedItem, setCapturedItem] = useState<string | null>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [classify, { isLoading, isError, error }] = useClassifyMutation();
@@ -164,13 +165,19 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSin
         if (imageElement) {
             imageElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
+
     };
+
+    // const handleCaptureItem = () => {
+    //     setCapturedItem(capturedImage);
+    //     setIsCapturing(false);
+    // }
 
     return (
         <div className="camera-button-container">
             <div className="button-container">
                 <button
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mr-2"
+                    className="bg-blue-500 text-white px-2 py-2 rounded hover:bg-blue-600 mr-2"
                     onClick={() => {
                         setSuccessAddingItem(null);
                         setIsCapturing(prev => !prev)
@@ -178,8 +185,9 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSin
                 >
                     {isCapturing ? 'Stop Scanning' : 'Scan items'}
                 </button>
+                {/* {isCapturing && <button className="bg-green-500 text-white px-2 py-2 rounded hover:bg-green-600 mr-2 mt-2 mb-2" onClick={handleCaptureItem}>Capture Item</button>} */}
                 {accumulatedResults.length > 0 && <button
-                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                    className="bg-red-500 text-white px-2 py-2 rounded hover:bg-red-600 mt-2 mr-2 mb-2"
                     onClick={clearAccumulatedResults}
                 >
                     Clear Results
@@ -200,14 +208,14 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSin
                     />
                 </div>
             )}
-            {/* {capturedImage && (
+            {/* {capturedItem && (
                 <div className="captured-image mt-4">
                     <h3 className="font-bold">Last Captured Image:</h3>
-                    <img src={capturedImage} alt="Captured" style={{ width: '250px', height: '250px' }} />
+                    <img src={capturedItem} alt="Captured" style={{ width: '100vw', height: '250px', objectFit: 'contain' }} />
                 </div>
             )} */}
             {accumulatedResults.length > 0 && <div className="ocr-result mt-4">
-                <h3 className="font-bold">OCR Results:</h3>
+                <h3 className="font-bold">Classified Items:</h3>
                 {accumulatedResults.length > 0 && (
                     <div className="bg-gray-100 p-2 rounded mt-2 overflow-auto max-h-60">
                         {accumulatedResults.map(item => (

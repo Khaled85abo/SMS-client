@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, ChangeEvent } from 'react';
 import { useCreateItemMutation, useUpdateItemMutation, useRemoveItemMutation } from "../redux/features/item/itemApi";
 import { useLazyGetSingleBoxQuery } from "../redux/features/box/boxApi";
 import { useLazyGetSingleWorkspaceQuery } from "../redux/features/workspace/workspaceApi";
@@ -29,9 +29,8 @@ type Item = {
     description: string;
     status: ItemStatus;
     box_id: string;
-    iamge: string;
+    image: string; // Changed from 'iamge' to 'image'
     quantity: number;
-
 }
 
 const SingleBox = () => {
@@ -44,7 +43,7 @@ const SingleBox = () => {
     const [modalOpen, setModalOpen] = useState(false);
     const [modalType, setModalType] = useState<ActionType | null>(null);
     const [selectedItem, setSelectedItem] = useState<Item | null>(null);
-    const [newItem, setNewItem] = useState({ name: '', description: '', box_id: boxId, quantity: 1 });
+    const [newItem, setNewItem] = useState({ name: '', description: '', box_id: boxId, quantity: 1, image: '' });
     const [modalError, setModalError] = useState<string | null>(null);
     const [modalSuccess, setModalSuccess] = useState<string | null>(null);
 
@@ -57,9 +56,9 @@ const SingleBox = () => {
         setModalSuccess(null);
         // Reset the newWorkspace state if it's a create action
         if (type === actionTypes.create) {
-            setNewItem({ name: '', description: '', box_id: boxId, quantity: 1 });
+            setNewItem({ name: '', description: '', box_id: boxId, quantity: 1, image: '' });
         } else if (type === actionTypes.edit && item) {
-            setNewItem({ name: item.name, description: item.description, box_id: boxId, quantity: item.quantity });
+            setNewItem({ name: item.name, description: item.description, box_id: boxId, quantity: item.quantity, image: item.image });
         }
     };
 
@@ -67,12 +66,26 @@ const SingleBox = () => {
         setModalOpen(false);
         setModalType(null);
         setSelectedItem(null);
-        setNewItem({ name: '', description: '', box_id: boxId, quantity: 1 });
+        setNewItem({ name: '', description: '', box_id: boxId, quantity: 1, image: '' });
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setNewItem(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const base64String = reader.result as string;
+                // Remove the "data:image/jpeg;base64," prefix
+                const base64Data = base64String.replace(/^data:image\/\w+;base64,/, '');
+                setNewItem(prev => ({ ...prev, image: base64Data }));
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
     const submitModal = () => {
@@ -155,13 +168,16 @@ const SingleBox = () => {
                             </button>
                         </div>
                     </div>
-                    {/* <p className="mt-2 text-gray-600">{workspace.description}</p> */}
+                    {item.image && (
+                        <img src={item.image} alt={item.name} className="mt-2 max-w-full h-auto" />
+                    )}
+                    <p className="mt-2 text-gray-600">{item.description}</p>
                 </div>
             ))}
 
             {/* Modal */}
             {modalOpen && (
-                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto  h-full w-full">
+                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
                     <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
                         <h3 className="text-lg font-semibold">
                             {modalType === 'create' ? 'Create New Item' :
@@ -188,6 +204,26 @@ const SingleBox = () => {
                                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                     />
                                 </div>
+                                <div className="mt-2">
+                                    <label className="block text-sm font-medium text-gray-700">Image</label>
+                                    <input
+                                        type="file"
+                                        name="image"
+                                        accept="image/*"
+                                        onChange={handleFileChange}
+                                        className="mt-1 block w-full text-sm text-gray-500
+                                            file:mr-4 file:py-2 file:px-4
+                                            file:rounded-full file:border-0
+                                            file:text-sm file:font-semibold
+                                            file:bg-blue-50 file:text-blue-700
+                                            hover:file:bg-blue-100"
+                                    />
+                                </div>
+                                {newItem.image && (
+                                    <div className="mt-2">
+                                        <img src={`data:image/png;base64,${newItem.image}`} alt="Preview" className="max-w-full h-auto" />
+                                    </div>
+                                )}
                             </form>
                         ) : (
                             <p>Are you sure you want to delete: {selectedItem?.name}?</p>

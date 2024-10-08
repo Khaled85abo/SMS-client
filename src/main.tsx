@@ -96,11 +96,11 @@ function App() {
           <Route path="/workspaces/:workspaceId/:boxId" element={<SingleBox />}></Route>
           <Route path="/workspaces/:workspaceId/:boxId/:itemId" element={<Item />}></Route>
           <Route path="/profile" element={<Profile />}></Route>
-          <Route path="/wardrobe" element={<Wardrobe />}></Route>
-          <Route
+          {/* <Route path="/wardrobe" element={<Wardrobe />}></Route> */}
+          {/* <Route
             path="/add-clothing-item"
             element={<AddClothingItem />}
-          ></Route>
+          ></Route> */}
         </Route>
         <Route path="/login" element={<Login />}></Route>
         <Route path="/signup" element={<Signup />}></Route>

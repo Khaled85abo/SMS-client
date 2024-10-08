@@ -18,7 +18,7 @@ type LoginState = {
 const Login = () => {
   const [login, setLogin] = useState<LoginState>({
     email: {
-      value: "",
+      value: "test@test.com",
       errors: [],
       validation: () => {
         return [];
@@ -26,7 +26,7 @@ const Login = () => {
       restrictions: [],
     },
     password: {
-      value: "",
+      value: "test",
       errors: [],
       validation: () => {
         return [];

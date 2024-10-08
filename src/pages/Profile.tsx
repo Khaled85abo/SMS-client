@@ -51,7 +51,7 @@ const Profile = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
           {!user.email_verified && <VerifyEmail />}
           <ProfileStatus />
-          <ItemsStatus />
+          {/* <ItemsStatus /> */}
         </div>
       </div>
     </div>
