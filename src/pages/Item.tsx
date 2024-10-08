@@ -31,7 +31,7 @@ const Item = () => {
                 <div className="max-w-sm mx-auto bg-white rounded-xl shadow-md overflow-hidden">
                     <div className="relative h-48">
                         <img
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-contain"
                             src={item?.images[0]?.url ? `${appConfig.BACKEND_URL}/${item?.images[0].url}` : 'https://via.placeholder.com/400x200'}
                             alt={item?.name}
                         />

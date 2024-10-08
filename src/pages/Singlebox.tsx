@@ -4,7 +4,7 @@ import { useLazyGetSingleBoxQuery } from "../redux/features/box/boxApi";
 import { useLazyGetSingleWorkspaceQuery } from "../redux/features/workspace/workspaceApi";
 import { useParams, Link } from 'react-router-dom';
 import ItemsClassifier from '../components/ItemsClassifier';
-
+import appConfig from "../config";
 const actionTypes = {
     create: 'create',
     edit: 'edit',
@@ -31,6 +31,7 @@ type Item = {
     box_id: string;
     image: string; // Changed from 'iamge' to 'image'
     quantity: number;
+    images: { id: number, url: string }[];
 }
 
 const SingleBox = () => {
@@ -148,11 +149,20 @@ const SingleBox = () => {
             </div>
             {isLoading && <p>Loading...</p>}
             {isSuccess && singleBox.items.map((item: Item) => (
-                <div key={item.id} className="bg-white shadow-md rounded-lg p-4 mb-4">
+                <div key={item.id} className="bg-white shadow-md rounded-lg p-1 mb-1">
                     <div className="flex justify-between items-center">
-                        <Link to={`/workspaces/${workspaceId}/${singleBox.id}/${item.id}`}>
-                            <h2 className="text-xl font-semibold">{item.name}</h2>
-                        </Link>
+                        <div className="flex items-center">
+                            <Link to={`/workspaces/${workspaceId}/${singleBox.id}/${item.id}`} className="mx-2">
+                                <h2 className="text-xl font-semibold">{item.name}</h2>
+                            </Link>
+                            {item.images.length > 0 && (
+                                <img
+                                    src={`${appConfig.BACKEND_URL}/${item.images[0].url}`}
+                                    alt={item.name}
+                                    className="w-12 h-12 object-contain rounded-md mr-4"
+                                />
+                            )}
+                        </div>
                         <div>
                             <button
                                 className="bg-blue-500 text-white px-3 py-1 rounded mr-2 hover:bg-blue-600"
@@ -171,7 +181,7 @@ const SingleBox = () => {
                     {item.image && (
                         <img src={item.image} alt={item.name} className="mt-2 max-w-full h-auto" />
                     )}
-                    <p className="mt-2 text-gray-600">{item.description}</p>
+                    <p className="mt-2 text-gray-600 ml-2">{item.description}</p>
                 </div>
             ))}
 
