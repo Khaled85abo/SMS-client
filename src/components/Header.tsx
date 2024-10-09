@@ -101,7 +101,7 @@ const Menu = () => {
 
         {user ? (
           <div className="flex gap-2 items-center">
-            <Notifications />
+            {/* <Notifications /> */}
             <Link to="/profile" className="dropdown-toggle flex items-center">
               <div className="flex-shrink-0 w-10 h-10 relative">
                 <div className="p-1 bg-white rounded-full focus:outline-none focus:ring">
@@ -173,22 +173,22 @@ const Menu = () => {
                     Workspaces
                   </NavLink>
                 </li>
-                <li>
+                {/* <li>
                   <NavLink
                     to="/wardrobe"
                     className={({ isActive }) => (isActive ? activeTab : tab)}
                   >
                     Wardrobe
                   </NavLink>
-                </li>
-                <li>
+                </li> */}
+                {/* <li>
                   <NavLink
                     to="/add-clothing-item"
                     className={({ isActive }) => (isActive ? activeTab : tab)}
                   >
                     Add item
                   </NavLink>
-                </li>
+                </li> */}
                 <li onClick={() => dispatch(logout())} className={tab}>
                   Logout
                 </li>
