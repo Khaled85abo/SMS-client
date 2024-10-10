@@ -12,6 +12,8 @@ type CameraDetectorProps = {
     getSingleBox: (id: number) => void;
 }
 
+type AccumulatedResults = Map<string, string[]>;
+
 const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSingleBox }: CameraDetectorProps) => {
     const [addItem, { isLoading: isAddingItem, isError: isAddingItemError, error: addingItemError }] = useCreateItemMutation();
     const [successAddingItem, setSuccessAddingItem] = useState<string | null>(null);
@@ -21,95 +23,93 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSin
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [classify, { isLoading, isError, error }] = useClassifyMutation();
-    const [accumulatedResults, setAccumulatedResults] = useState<{ name: string, imgs: string[] }[]>([]);
+    const [accumulatedResults, setAccumulatedResults] = useState<AccumulatedResults>(new Map());
     const streamRef = useRef<MediaStream | null>(null);
     const [selectedItem, setSelectedItem] = useState<{ name: string, imgs: string[] } | null>(null);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
+
+    const captureAndSend = () => {
+        if (videoRef.current && canvasRef.current) {
+            const context = canvasRef.current.getContext('2d');
+            if (context) {
+                // const { videoWidth, videoHeight } = videoRef.current;
+                // canvasRef.current.width = videoWidth;
+                // canvasRef.current.height = videoHeight;
+                // context.drawImage(videoRef.current, 0, 0, videoWidth, videoHeight);
+                // const imageDataUrl = canvasRef.current.toDataURL('image/jpeg');
+                // setCapturedImage(imageDataUrl);
+                // Access the original video dimensions
+                const { videoWidth, videoHeight } = videoRef.current;
+
+                // Calculate scale factor to fit the image within 250x250 while maintaining aspect ratio
+                const scale = Math.min(1200 / videoWidth, 1200 / videoHeight);
+
+                // Set the canvas size based on the scale factor
+                canvasRef.current.width = videoWidth * scale;
+                canvasRef.current.height = videoHeight * scale;
+
+                // Draw the video frame to the canvas, scaling it down
+                context.drawImage(videoRef.current, 0, 0, videoWidth * scale, videoHeight * scale);
+
+                // Convert canvas to a JPEG URL
+                const imageDataUrl = canvasRef.current.toDataURL('image/jpeg');
+
+                // Store the scaled image data URL
+                setCapturedImage(imageDataUrl);
+
+                canvasRef.current.toBlob((blob) => {
+                    if (blob) {
+                        const formData = new FormData();
+                        formData.append('file', blob, 'capture.jpg');
+                        classify(formData).then((result) => {
+                            if ('data' in result && result.data?.items) {
+                                const items = Object.entries(result.data.items).map(([name, values]) => ({ name, imgs: values?.images }));
+                                setAccumulatedResults(prevResults => {
+                                    const updatedResults = new Map(prevResults);
+                                    items.forEach(item => {
+                                        const existingItem = updatedResults.get(item.name);
+                                        if (existingItem) {
+                                            updatedResults.set(item.name, [...existingItem, ...item.imgs]);
+                                        } else {
+                                            updatedResults.set(item.name, item.imgs);
+                                        }
+                                    });
+                                    return updatedResults;
+                                });
+                            }
+                        });
+                    }
+                }, 'image/jpeg');
+            }
+        }
+    };
+
+    const startVideo = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment' }
+            });
+            streamRef.current = stream;
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+                videoRef.current.play();
+            }
+        } catch (err) {
+            console.error("Error accessing camera:", err);
+        }
+    };
+
+    const stopVideo = () => {
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+            streamRef.current = null;
+        }
+    };
+
+
     useEffect(() => {
         let intervalId: number;
-
-        const startVideo = async () => {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'environment' }
-                });
-                streamRef.current = stream;
-                if (videoRef.current) {
-                    videoRef.current.srcObject = stream;
-                    videoRef.current.play();
-                }
-            } catch (err) {
-                console.error("Error accessing camera:", err);
-            }
-        };
-
-        const stopVideo = () => {
-            if (streamRef.current) {
-                streamRef.current.getTracks().forEach(track => track.stop());
-                streamRef.current = null;
-            }
-        };
-
-        const captureAndSend = () => {
-            if (videoRef.current && canvasRef.current) {
-                const context = canvasRef.current.getContext('2d');
-                if (context) {
-                    // const { videoWidth, videoHeight } = videoRef.current;
-                    // canvasRef.current.width = videoWidth;
-                    // canvasRef.current.height = videoHeight;
-                    // context.drawImage(videoRef.current, 0, 0, videoWidth, videoHeight);
-                    // const imageDataUrl = canvasRef.current.toDataURL('image/jpeg');
-                    // setCapturedImage(imageDataUrl);
-                    // Access the original video dimensions
-                    const { videoWidth, videoHeight } = videoRef.current;
-
-                    // Calculate scale factor to fit the image within 250x250 while maintaining aspect ratio
-                    const scale = Math.min(1200 / videoWidth, 1200 / videoHeight);
-
-                    // Set the canvas size based on the scale factor
-                    canvasRef.current.width = videoWidth * scale;
-                    canvasRef.current.height = videoHeight * scale;
-
-                    // Draw the video frame to the canvas, scaling it down
-                    context.drawImage(videoRef.current, 0, 0, videoWidth * scale, videoHeight * scale);
-
-                    // Convert canvas to a JPEG URL
-                    const imageDataUrl = canvasRef.current.toDataURL('image/jpeg');
-
-                    // Store the scaled image data URL
-                    setCapturedImage(imageDataUrl);
-
-                    canvasRef.current.toBlob((blob) => {
-                        if (blob) {
-                            const formData = new FormData();
-                            formData.append('file', blob, 'capture.jpg');
-                            classify(formData).then((result) => {
-                                if ('data' in result && result.data?.items) {
-                                    const items = Object.entries(result.data.items).map(([name, values]) => ({ name, imgs: values?.images }));
-                                    setAccumulatedResults(prevResults => {
-                                        const updatedResults = [...prevResults];
-                                        items.forEach(item => {
-                                            const existingItemIndex = updatedResults.findIndex(r => r.name === item.name);
-                                            if (existingItemIndex !== -1) {
-                                                // Item exists, add new images
-                                                updatedResults[existingItemIndex].imgs = [
-                                                    ...new Set([...updatedResults[existingItemIndex].imgs, ...item.imgs])
-                                                ];
-                                            } else {
-                                                // New item, add to results
-                                                updatedResults.push(item);
-                                            }
-                                        });
-                                        return updatedResults;
-                                    });
-                                }
-                            });
-                        }
-                    }, 'image/jpeg');
-                }
-            }
-        };
 
         if (isCapturing) {
             startVideo();
@@ -125,7 +125,7 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSin
     }, [isCapturing, classify]);
 
     const clearAccumulatedResults = () => {
-        setAccumulatedResults([]);
+        setAccumulatedResults(new Map());
     };
 
     const createItem = (item: { name: string, description: string }) => {
@@ -186,7 +186,7 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSin
                     {isCapturing ? 'Stop Scanning' : 'Scan items'}
                 </button>
                 {/* {isCapturing && <button className="bg-green-500 text-white px-2 py-2 rounded hover:bg-green-600 mr-2 mt-2 mb-2" onClick={handleCaptureItem}>Capture Item</button>} */}
-                {accumulatedResults.length > 0 && <button
+                {accumulatedResults.size > 0 && <button
                     className="bg-red-500 text-white px-2 py-2 rounded hover:bg-red-600 mt-2 mr-2 mb-2"
                     onClick={clearAccumulatedResults}
                 >
@@ -214,31 +214,29 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSin
                     <img src={capturedItem} alt="Captured" style={{ width: '100vw', height: '250px', objectFit: 'contain' }} />
                 </div>
             )} */}
-            {accumulatedResults.length > 0 && <div className="ocr-result mt-4">
+            {accumulatedResults.size > 0 && <div className="ocr-result mt-4">
                 <h3 className="font-bold">Classified Items:</h3>
-                {accumulatedResults.length > 0 && (
-                    <div className="bg-gray-100 p-2 rounded mt-2 overflow-auto max-h-60">
-                        {accumulatedResults.map(item => (
-                            <div key={item.name} className="flex flex-col mb-4">
-                                <div className="flex justify-between items-center mb-2">
-                                    <p className="font-bold cursor-pointer" onClick={() => handleItemClick(item)}>{item.name}</p>
-                                    {box.items.find(b => b.name === item.name) ?
-                                        <Link to={`/workspaces/${workspace.id}/${box.id}/${box.items.find(b => b.name === item.name)?.id}`}>
-                                            <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Review</button>
-                                        </Link>
-                                        :
-                                        <button onClick={() => handleItemClick(item)} className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Add</button>
-                                    }
-                                </div>
-                                <div className="overflow-x-auto whitespace-nowrap">
-                                    {item.imgs.map((img, index) => (
-                                        <img key={index} src={`data:image/png;base64,${img}`} alt={item.name} className="w-14 h-14 object-cover inline-block mr-2" />
-                                    ))}
-                                </div>
+                <div className="bg-gray-100 p-2 rounded mt-2 overflow-auto max-h-60">
+                    {Array.from(accumulatedResults).map(([name, imgs]) => (
+                        <div key={name} className="flex flex-col mb-4">
+                            <div className="flex justify-between items-center mb-2">
+                                <p className="font-bold cursor-pointer" onClick={() => handleItemClick({ name, imgs })}>{name}</p>
+                                {box.items.find(b => b.name === name) ?
+                                    <Link to={`/workspaces/${workspace.id}/${box.id}/${box.items.find(b => b.name === name)?.id}`}>
+                                        <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Review</button>
+                                    </Link>
+                                    :
+                                    <button onClick={() => handleItemClick({ name, imgs })} className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Add</button>
+                                }
                             </div>
-                        ))}
-                    </div>
-                )}
+                            <div className="overflow-x-auto whitespace-nowrap">
+                                {imgs.map((img, index) => (
+                                    <img key={index} src={`data:image/png;base64,${img}`} alt={name} className="w-14 h-14 object-cover inline-block mr-2" />
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
                 {successAddingItem && <p>Successfully added {successAddingItem}</p>}
                 {isAddingItemError && <p>Error: {(addingItemError as any)?.data?.message || 'An error occurred'}</p>}
                 {isAddingItem && <p>Adding box...</p>}
@@ -253,7 +251,7 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSin
                             <ImageSlider images={selectedItem.imgs} selectedIndex={selectedImageIndex} onImageChange={handleImageSelect} />
                             {selectedItem.imgs.length > 1 && (
                                 <div className="flex justify-center mt-2 flex-wrap">
-                                    {selectedItem.imgs.map((img, index) => (
+                                    {selectedItem.imgs.map((_, index) => (
                                         <label key={index} className="mx-2">
                                             <input
                                                 type="radio"
