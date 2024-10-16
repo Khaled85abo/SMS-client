@@ -92,7 +92,7 @@ const SingleBox = () => {
     const submitModal = () => {
         console.log(newItem);
         if (modalType === actionTypes.create) {
-            createItem(newItem)
+            createItem({ ...newItem, workspace: singleWorkspace?.name, box: singleBox?.name })
                 .unwrap()
                 .then(() => {
                     setModalSuccess('Box created successfully!');
