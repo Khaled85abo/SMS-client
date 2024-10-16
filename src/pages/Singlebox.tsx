@@ -153,7 +153,7 @@ const SingleBox = () => {
                     <div className="flex justify-between items-center">
                         <div className="flex items-center">
                             <Link to={`/workspaces/${workspaceId}/${singleBox.id}/${item.id}`} className="mx-2">
-                                <h2 className="text-xl font-semibold">{item.name}</h2>
+                                <h2 className="text-lg font-semibold">{item.name}</h2>
                             </Link>
                             {item.images.length > 0 && (
                                 <img

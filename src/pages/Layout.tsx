@@ -12,7 +12,7 @@ const Layout = () => {
     <div className="flex flex-col min-h-screen font-best">
       <Header />
       <animated.div
-        className=" min-h-screen overflow-hidden"
+        className=" min-h-screen overflow-hidden mt-3 px-2"
         style={{
           ...springs,
         }}

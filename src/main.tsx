@@ -33,6 +33,7 @@ import {
 import Workspace from "./pages/SingleWorkspace";
 import SingleBox from "./pages/Singlebox";
 import Item from "./pages/Item";
+import Search from "./pages/Seach";
 
 const ProtectedRoutes = () => {
   const location = useLocation();
@@ -96,6 +97,7 @@ function App() {
           <Route path="/workspaces/:workspaceId/:boxId" element={<SingleBox />}></Route>
           <Route path="/workspaces/:workspaceId/:boxId/:itemId" element={<Item />}></Route>
           <Route path="/profile" element={<Profile />}></Route>
+          <Route path="/search" element={<Search />}></Route>
           {/* <Route path="/wardrobe" element={<Wardrobe />}></Route> */}
           {/* <Route
             path="/add-clothing-item"
