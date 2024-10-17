@@ -53,6 +53,7 @@ const SingleBox = () => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [detectBoxesNames] = useDetect_boxes_namesMutation();
+    const [showCameraFeed, setShowCameraFeed] = useState(false);
 
     const openModal = (type: ActionType, item: Item | null = null) => {
         setModalType(type);
@@ -126,6 +127,7 @@ const SingleBox = () => {
 
     const startLocating = () => {
         setIsLocating(true);
+        setShowCameraFeed(true);
         navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
             .then(stream => {
                 if (videoRef.current) {
@@ -138,6 +140,7 @@ const SingleBox = () => {
 
     const stopLocating = () => {
         setIsLocating(false);
+        setShowCameraFeed(false);
         if (videoRef.current && videoRef.current.srcObject) {
             const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
             tracks.forEach(track => track.stop());
@@ -350,12 +353,15 @@ const SingleBox = () => {
             )}
 
             {isLocating && (
-                <div className="camera-feed">
+                <div className="camera-feed mt-4">
+                    <h3 className="font-bold mb-2">Camera Feed:</h3>
                     <video
                         ref={videoRef}
-                        style={{ display: 'none' }}
+                        style={{ display: showCameraFeed ? 'block' : 'none' }}
                         width="640"
                         height="480"
+                        autoPlay
+                        playsInline
                     />
                     <canvas
                         ref={canvasRef}
