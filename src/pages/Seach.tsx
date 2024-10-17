@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { useSearchMutation } from '../redux/features/rag/ragApi';
 import { useGetWorkspacesQuery } from '../redux/features/workspace/workspaceApi';
 import { Workspace } from '../types/workspace';
+import { Link } from 'react-router-dom';
 
 interface SearchResult {
     uuid: string;
@@ -85,9 +86,9 @@ const Search = () => {
                 <ul className="space-y-2">
                     {results.map((result) => (
                         <li key={result.uuid} className="border p-2 rounded">
-                            <h3 className="font-semibold text-lg">{result.name}</h3>
-                            <p><span className="font-medium text-blue-600">Box:</span> {result.box}</p>
-                            <p><span className="font-medium text-green-600">Workspace:</span> {result.workspace}</p>
+                            <h3 className="font-semibold text-lg"><Link to={`/workspaces/${result.workspace_id}/${result.box_id}/${result.item_id}`}>{result.name}</Link></h3>
+                            <p><span className="font-medium text-blue-600">Box:</span> <Link to={`/workspaces/${result.workspace_id}/${result.box_id}`}>{result.box}    </Link></p>
+                            <p><span className="font-medium text-green-600">Workspace:</span> <Link to={`/workspaces/${result.workspace_id}`}>{result.workspace}</Link></p>
                             {result.description && <p><span className="font-medium text-purple-600">Description:</span> {result.description}</p>}
                         </li>
                     ))}
@@ -95,7 +96,6 @@ const Search = () => {
             </div>
         );
     };
-
     const renderGeneratedResults = () => {
         if (!useAIFilter) return null;
 
