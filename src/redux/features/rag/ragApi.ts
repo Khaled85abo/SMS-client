@@ -24,9 +24,10 @@ export const ragApi = createApi({
             }),
         }),
         search: builder.mutation({
-            query: () => ({
+            query: (body) => ({
                 url: "/search",
                 method: "POST",
+                body: body,
             }),
         }),
     }),
