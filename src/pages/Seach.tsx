@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useSearchMutation } from '../redux/features/rag/ragApi';
 import { useGetWorkspacesQuery } from '../redux/features/workspace/workspaceApi';
 import { Workspace } from '../types/workspace';
@@ -21,6 +21,8 @@ interface SearchResponse {
 
 const Search = () => {
     const [search, { isLoading, isError, error }] = useSearchMutation();
+    const searchPromiseRef = useRef<ReturnType<typeof search> | null>(null); // Type for storing the mutation promise
+
     const { data: workspaces, isLoading: isLoadingWorkspaces, isSuccess } = useGetWorkspacesQuery({});
     const [searchType, setSearchType] = useState<'keyword' | 'semantic'>('keyword');
     const [searchQuery, setSearchQuery] = useState('');
@@ -38,20 +40,35 @@ const Search = () => {
 
     const handleSearchSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        // Assign searchPromiseRef to the search mutation call
+        searchPromiseRef.current = search({
+            query: searchQuery,
+            type: searchType,
+            workspace: selectedWorkspace?.name || "",
+            use_ai_filter: useAIFilter,
+        });
         try {
-            const response = await search({
-                query: searchQuery,
-                type: searchType,
-                workspace: selectedWorkspace?.name || "",
-                use_ai_filter: useAIFilter,
-            }).unwrap();
+            const response = await searchPromiseRef.current.unwrap(); // Use unwrap() to handle the promise response
             setSearchResults(response);
             setVisibleResults(2);
-        } catch (err) {
+        } catch (err: any) {
+            // Log the error for better understanding
             console.error('Error performing search:', err);
+
+            if (err.name && err.name === 'AbortError') {
+                console.log('Search was aborted');
+            } else {
+                console.error('Error performing search:', err);
+            }
         }
     };
 
+    // To abort the search
+    const abortSearch = () => {
+        if (searchPromiseRef.current) {
+            searchPromiseRef.current.abort(); // Abort the search if the promise is ongoing
+        }
+    };
     const renderSearchResults = (results: SearchResult[], title: string) => {
         if (!results || results.length === 0) {
             return (
@@ -164,14 +181,32 @@ const Search = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder={`Enter ${searchType} search...`}
                     className="flex-grow px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={isLoading}
                 />
                 <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-500 text-white rounded-r-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="px-4 py-2 bg-blue-500 text-white rounded-r-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400"
+                    disabled={isLoading}
                 >
                     Search
                 </button>
             </form>
+            {isLoading && (
+                <div className="mt-4">
+                    <p className="text-blue-600">Loading results...</p>
+                    <button
+                        onClick={abortSearch}
+                        className="mt-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                    >
+                        Cancel Search
+                    </button>
+                </div>
+            )}
+            {isError && (
+                <div className="mt-4 text-red-600">
+                    <p>Error: {(error as any)?.data?.message || 'An unknown error occurred'}</p>
+                </div>
+            )}
             {searchType === 'semantic' && (
                 <div className="mb-4">
                     <label className="inline-flex items-center">
@@ -185,7 +220,7 @@ const Search = () => {
                     </label>
                 </div>
             )}
-            {searchResults ? (
+            {!isLoading && !isError && searchResults ? (
                 <>
                     {renderGeneratedResults()}
                     {renderSearchResults(searchResults.results.slice(0, visibleResults), "Search Results:")}
@@ -199,7 +234,9 @@ const Search = () => {
                     )}
                 </>
             ) : (
-                <p className="mt-4 text-gray-600 italic">No search results yet. Try searching for something!</p>
+                !isLoading && !isError && (
+                    <p className="mt-4 text-gray-600 italic">No search results yet. Try searching for something!</p>
+                )
             )}
         </div>
     );
