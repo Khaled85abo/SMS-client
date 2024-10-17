@@ -110,6 +110,14 @@ const Search = () => {
 
         try {
             const parsedResults = JSON.parse(searchResults.generated_result);
+            for (const result of parsedResults) {
+                const existingResult = searchResults.results.find(el => el.name == result.name);
+                if (existingResult) {
+                    result.workspace_id = existingResult.workspace_id;
+                    result.box_id = existingResult.box_id;
+                    result.item_id = existingResult.item_id;
+                }
+            }
             return renderSearchResults(parsedResults, "AI Filtered Results:");
         } catch (error) {
             console.error('Error parsing generated results:', error);
