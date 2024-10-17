@@ -1,7 +1,8 @@
-import React, { useEffect, useState, ChangeEvent } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useCreateItemMutation, useUpdateItemMutation, useRemoveItemMutation } from "../redux/features/item/itemApi";
 import { useLazyGetSingleBoxQuery } from "../redux/features/box/boxApi";
 import { useLazyGetSingleWorkspaceQuery } from "../redux/features/workspace/workspaceApi";
+import { useDetect_boxes_namesMutation } from "../redux/features/detect/detectApi";
 import { useParams, Link } from 'react-router-dom';
 import ItemsClassifier from '../components/ItemsClassifier';
 import appConfig from "../config";
@@ -47,6 +48,11 @@ const SingleBox = () => {
     const [newItem, setNewItem] = useState({ name: '', description: '', box_id: boxId, quantity: 1, image: '' });
     const [modalError, setModalError] = useState<string | null>(null);
     const [modalSuccess, setModalSuccess] = useState<string | null>(null);
+    const [isLocating, setIsLocating] = useState(false);
+    const [locatedBoxImage, setLocatedBoxImage] = useState<string | null>(null);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const [detectBoxesNames] = useDetect_boxes_namesMutation();
 
     const openModal = (type: ActionType, item: Item | null = null) => {
         setModalType(type);
@@ -75,7 +81,7 @@ const SingleBox = () => {
         setNewItem(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
             const reader = new FileReader();
@@ -118,12 +124,78 @@ const SingleBox = () => {
         }
     };
 
-    // // Add this function to refetch the workspace data
-    // const refetchWorkspace = useCallback(() => {
-    //     if (workspaceId) {
-    //         getSingleWorkspace(workspaceId);
-    //     }
-    // }, [workspaceId, getSingleWorkspace]);
+    const startLocating = () => {
+        setIsLocating(true);
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+            .then(stream => {
+                if (videoRef.current) {
+                    videoRef.current.srcObject = stream;
+                    videoRef.current.play();
+                }
+            })
+            .catch(err => console.error("Error accessing camera:", err));
+    };
+
+    const stopLocating = () => {
+        setIsLocating(false);
+        if (videoRef.current && videoRef.current.srcObject) {
+            const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
+            tracks.forEach(track => track.stop());
+        }
+    };
+
+    const captureAndLocate = () => {
+        if (videoRef.current && canvasRef.current) {
+            const context = canvasRef.current.getContext('2d');
+            if (context) {
+                const { videoWidth, videoHeight } = videoRef.current;
+                canvasRef.current.width = videoWidth;
+                canvasRef.current.height = videoHeight;
+                context.drawImage(videoRef.current, 0, 0, videoWidth, videoHeight);
+
+                canvasRef.current.toBlob((blob) => {
+                    if (blob) {
+                        const formData = new FormData();
+                        formData.append('file', blob, 'capture.jpg');
+                        detectBoxesNames(formData).then((result) => {
+                            if ('data' in result && result.data?.boxes) {
+                                const detectedBoxes = result.data.boxes;
+                                const matchingBox = detectedBoxes[singleBox?.name];
+                                if (matchingBox) {
+                                    const [x1, y1] = matchingBox.bbox[0];
+                                    const [x2, y2] = matchingBox.bbox[2];
+                                    const centerX = (x1 + x2) / 2;
+                                    const centerY = (y1 + y2) / 2;
+                                    const radius = Math.min(x2 - x1, y2 - y1) / 2;
+
+                                    context.beginPath();
+                                    context.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+                                    context.strokeStyle = 'red';
+                                    context.lineWidth = 3;
+                                    context.stroke();
+
+                                    if (canvasRef.current) {
+                                        setLocatedBoxImage(canvasRef.current.toDataURL('image/jpeg'));
+                                        stopLocating();
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }, 'image/jpeg');
+            }
+        }
+    };
+
+    useEffect(() => {
+        let intervalId: number | null = null;
+        if (isLocating) {
+            intervalId = window.setInterval(captureAndLocate, 1000);
+        }
+        return () => {
+            if (intervalId) clearInterval(intervalId);
+        };
+    }, [isLocating]);
 
     useEffect(() => {
         getSingleBox(boxId);
@@ -133,19 +205,27 @@ const SingleBox = () => {
     return (
         <div>
             <h3 className='m-4 text-xl font-bold'><Link to="/workspaces" className='text-blue-500'>Workspaces</Link> / <Link to={`/workspaces/${workspaceId}`} className='text-blue-500'>{singleWorkspace?.name}</Link> / {singleBox?.name}</h3>
-            <h1 className='mt-4 ml-4 text-2xl font-semibold '>Items of {singleBox?.name}</h1>
+            <h1 className='mt-4 ml-4 text-2xl font-semibold '>Items in {singleBox?.name}</h1>
             <div className=" p-4">
 
                 <ItemsClassifier box={singleBox} getSingleBox={getSingleBox} workspace={singleWorkspace} />
             </div>
             <div className="flex justify-between items-center p-4 mb-4">
                 <h1 className="text-xl font-semibold">Items</h1>
-                <button
-                    className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                    onClick={() => openModal(actionTypes.create)}
-                >
-                    Add New Item
-                </button>
+                <div>
+                    <button
+                        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mr-2"
+                        onClick={() => openModal(actionTypes.create)}
+                    >
+                        Add New Item
+                    </button>
+                    <button
+                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                        onClick={isLocating ? stopLocating : startLocating}
+                    >
+                        {isLocating ? 'Stop Locating' : 'Locate Box'}
+                    </button>
+                </div>
             </div>
             {isLoading && <p>Loading...</p>}
             {isSuccess && singleBox.items.map((item: Item) => (
@@ -269,6 +349,28 @@ const SingleBox = () => {
                 </div>
             )}
 
+            {isLocating && (
+                <div className="camera-feed">
+                    <video
+                        ref={videoRef}
+                        style={{ display: 'none' }}
+                        width="640"
+                        height="480"
+                    />
+                    <canvas
+                        ref={canvasRef}
+                        style={{ display: 'none' }}
+                        width="640"
+                        height="480"
+                    />
+                </div>
+            )}
+            {locatedBoxImage && (
+                <div className="located-box-image mt-4">
+                    <h3 className="font-bold">Located Box:</h3>
+                    <img src={locatedBoxImage} alt="Located Box" style={{ maxWidth: '100%', height: 'auto' }} />
+                </div>
+            )}
 
         </div>
     );
