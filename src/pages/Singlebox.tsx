@@ -1,7 +1,8 @@
-import React, { useEffect, useState, ChangeEvent } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useCreateItemMutation, useUpdateItemMutation, useRemoveItemMutation } from "../redux/features/item/itemApi";
 import { useLazyGetSingleBoxQuery } from "../redux/features/box/boxApi";
 import { useLazyGetSingleWorkspaceQuery } from "../redux/features/workspace/workspaceApi";
+import { useDetect_boxes_namesMutation } from "../redux/features/detect/detectApi";
 import { useParams, Link } from 'react-router-dom';
 import ItemsClassifier from '../components/ItemsClassifier';
 import appConfig from "../config";
@@ -35,6 +36,9 @@ type Item = {
 }
 
 const SingleBox = () => {
+
+    const TIME_DELAY_BETWEEN_CAPTURES = 500;
+    let timeoutId: number | null = null;
     const { boxId, workspaceId } = useParams();
     const [getSingleBox, { data: singleBox, isLoading, isSuccess }] = useLazyGetSingleBoxQuery({});
     const [getSingleWorkspace, { data: singleWorkspace, isLoading: isWorkspaceLoading, isSuccess: isWorkspaceSuccess }] = useLazyGetSingleWorkspaceQuery({});
@@ -47,6 +51,13 @@ const SingleBox = () => {
     const [newItem, setNewItem] = useState({ name: '', description: '', box_id: boxId, quantity: 1, image: '' });
     const [modalError, setModalError] = useState<string | null>(null);
     const [modalSuccess, setModalSuccess] = useState<string | null>(null);
+    const [isLocating, setIsLocating] = useState(false);
+    const [locatedBoxImage, setLocatedBoxImage] = useState<string | null>(null);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const [detectBoxesNames] = useDetect_boxes_namesMutation();
+    const [showCameraFeed, setShowCameraFeed] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     const openModal = (type: ActionType, item: Item | null = null) => {
         setModalType(type);
@@ -75,7 +86,7 @@ const SingleBox = () => {
         setNewItem(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
             const reader = new FileReader();
@@ -118,12 +129,119 @@ const SingleBox = () => {
         }
     };
 
-    // // Add this function to refetch the workspace data
-    // const refetchWorkspace = useCallback(() => {
-    //     if (workspaceId) {
-    //         getSingleWorkspace(workspaceId);
-    //     }
-    // }, [workspaceId, getSingleWorkspace]);
+    const startLocating = () => {
+        setIsLocating(true);
+        setShowCameraFeed(true);
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+            .then(stream => {
+                if (videoRef.current) {
+                    videoRef.current.srcObject = stream;
+                    videoRef.current.play();
+                }
+            })
+            .catch(err => console.error("Error accessing camera:", err));
+    };
+
+    const stopLocating = () => {
+        setIsLocating(false);
+        setShowCameraFeed(false);
+        if (videoRef.current) {
+            videoRef.current.srcObject = null;
+        }
+        if (videoRef.current && videoRef.current.srcObject) {
+            const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
+            tracks.forEach(track => track.stop());
+        }
+    };
+
+    const captureAndLocate = async () => {
+        if (isProcessing || !isLocating) return;
+        setIsProcessing(true);
+
+        if (videoRef.current && canvasRef.current) {
+            const context = canvasRef.current.getContext('2d');
+            if (context) {
+                const { videoWidth, videoHeight } = videoRef.current;
+                canvasRef.current.width = videoWidth;
+                canvasRef.current.height = videoHeight;
+                context.drawImage(videoRef.current, 0, 0, videoWidth, videoHeight);
+
+                canvasRef.current.toBlob(async (blob) => {
+                    if (blob) {
+                        const formData = new FormData();
+                        formData.append('file', blob, 'capture.jpg');
+                        try {
+                            const result = await detectBoxesNames(formData)
+                            if ('data' in result && result.data?.boxes) {
+                                const detectedBoxes = result.data.boxes;
+                                const matchingBox = detectedBoxes[singleBox?.name];
+                                if (matchingBox) {
+                                    const [x1, y1] = matchingBox.bbox[0];
+                                    const [x2, y2] = matchingBox.bbox[2];
+                                    const centerX = (x1 + x2) / 2;
+                                    const centerY = (y1 + y2) / 2;
+                                    const radius = Math.min(x2 - x1, y2 - y1) / 2;
+
+                                    context.beginPath();
+                                    context.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+                                    context.strokeStyle = 'red';
+                                    context.lineWidth = 3;
+                                    context.stroke();
+
+                                    if (canvasRef.current) {
+                                        setLocatedBoxImage(canvasRef.current.toDataURL('image/jpeg'));
+                                        stopLocating();
+                                    }
+                                }
+                            }
+                        }
+                        catch (error) {
+                            console.error("Error detecting boxes:", error);
+                        } finally {
+                            setIsProcessing(false);
+                            if (isLocating) {
+                                setTimeout(captureAndLocate, TIME_DELAY_BETWEEN_CAPTURES);
+                            }
+                        }
+                        // .catch((error) => {
+                        //     console.error("Error detecting boxes:", error);
+                        // })
+                        // .finally(() => {
+                        //     setIsProcessing(false);
+                        //     // Immediately start the next capture if still locating
+                        //     if (isLocating) {
+                        //         timeoutId = window.setTimeout(captureAndLocate, TIME_DELAY_BETWEEN_CAPTURES); // Adjust the delay as needed
+                        //     }
+                        // });
+                    } else {
+                        setIsProcessing(false);
+                        if (isLocating) {
+                            captureAndLocate();
+                        }
+                    }
+                }, 'image/jpeg');
+            } else {
+                setIsProcessing(false);
+                if (isLocating) {
+                    captureAndLocate();
+                }
+            }
+        } else {
+            setIsProcessing(false);
+            if (isLocating) {
+                captureAndLocate();
+            }
+        }
+    };
+
+    useEffect(() => {
+        if (isLocating && !isProcessing) {
+            captureAndLocate();
+        }
+        return () => {
+            if (timeoutId) clearTimeout(timeoutId);
+        };
+    }, [isLocating]);
 
     useEffect(() => {
         getSingleBox(boxId);
@@ -132,8 +250,46 @@ const SingleBox = () => {
 
     return (
         <div>
-            <h3 className='m-4 text-xl font-bold'><Link to="/workspaces" className='text-blue-500'>Workspaces</Link> / <Link to={`/workspaces/${workspaceId}`} className='text-blue-500'>{singleWorkspace?.name}</Link> / {singleBox?.name}</h3>
-            <h1 className='mt-4 ml-4 text-2xl font-semibold '>Items of {singleBox?.name}</h1>
+            <div>
+
+                <h3 className='m-4 text-xl font-bold'>
+                    <Link to="/workspaces" className='text-blue-500'>Workspaces</Link> /
+                    <Link to={`/workspaces/${workspaceId}`} className='text-blue-500'>{singleWorkspace?.name}</Link> /
+                    {singleBox?.name}
+                </h3>
+                <button
+                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 ml-4"
+                    onClick={isLocating ? stopLocating : startLocating}
+                >
+                    {isLocating ? 'Stop Locating' : 'Locate Box'}
+                </button>
+            </div>
+            {isLocating && (
+                <div className="camera-feed mt-4">
+                    <h3 className="font-bold mb-2">Camera Feed:</h3>
+                    <video
+                        ref={videoRef}
+                        style={{ display: showCameraFeed ? 'block' : 'none' }}
+                        width="640"
+                        height="480"
+                        autoPlay
+                        playsInline
+                    />
+                    <canvas
+                        ref={canvasRef}
+                        style={{ display: 'none' }}
+                        width="640"
+                        height="480"
+                    />
+                </div>
+            )}
+            {locatedBoxImage && (
+                <div className="located-box-image mt-4">
+                    <div className='flex  items-center mb-2'> <h3 className="font-bold">Located {singleBox?.name}: </h3> <button onClick={() => setLocatedBoxImage(null)} className='bg-red-500 text-white px-2 py-1 ml-2 rounded hover:bg-red-600'>Remove image</button></div>
+                    <img src={locatedBoxImage} alt="Located Box" style={{ maxWidth: '100%', height: 'auto' }} />
+                </div>
+            )}
+            <h1 className='mt-4 ml-4 text-2xl font-semibold '>Items in {singleBox?.name}</h1>
             <div className=" p-4">
 
                 <ItemsClassifier box={singleBox} getSingleBox={getSingleBox} workspace={singleWorkspace} />
@@ -153,7 +309,7 @@ const SingleBox = () => {
                     <div className="flex justify-between items-center">
                         <div className="flex items-center">
                             <Link to={`/workspaces/${workspaceId}/${singleBox.id}/${item.id}`} className="mx-2">
-                                <h2 className="text-xl font-semibold">{item.name}</h2>
+                                <h2 className="text-lg font-semibold">{item.name}</h2>
                             </Link>
                             {item.images.length > 0 && (
                                 <img
@@ -268,6 +424,7 @@ const SingleBox = () => {
                     </div>
                 </div>
             )}
+
 
 
         </div>

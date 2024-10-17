@@ -173,6 +173,14 @@ const Menu = () => {
                     Workspaces
                   </NavLink>
                 </li>
+                <li>
+                  <NavLink
+                    to="/search"
+                    className={({ isActive }) => (isActive ? activeTab : tab)}
+                  >
+                    Search
+                  </NavLink>
+                </li>
                 {/* <li>
                   <NavLink
                     to="/wardrobe"
