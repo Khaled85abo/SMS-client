@@ -30,6 +30,9 @@ const Search = () => {
     const [visibleResults, setVisibleResults] = useState(2);
 
     const handleSearchTypeChange = (type: 'keyword' | 'semantic') => {
+        if (type === "keyword") {
+            setUseAIFilter(false);
+        }
         setSearchType(type);
     };
 
@@ -49,59 +52,57 @@ const Search = () => {
         }
     };
 
-    const renderGeneratedResults = () => {
-        if (!searchResults?.generated_result) return null;
-
-        try {
-            const parsedResults = JSON.parse(searchResults.generated_result);
+    const renderSearchResults = (results: SearchResult[], title: string) => {
+        if (!results || results.length === 0) {
             return (
-                <div className="mb-4">
-                    <h2 className="text-lg font-semibold mb-2">AI Filtered Results:</h2>
-                    <ul className="list-disc pl-5">
-                        {parsedResults.map((result: SearchResult, index: number) => (
-                            <li key={index}>
-                                {result.name} - {result.box} ({result.workspace})
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            );
-        } catch (error) {
-            console.error('Error parsing generated results:', error);
-            return (
-                <div className="mb-4">
-                    <p>Error parsing generated results</p>
+                <div className="mt-4">
+                    <h2 className="text-lg font-semibold mb-2">{title}</h2>
+                    <p className="text-gray-600 italic">No results found.</p>
                 </div>
             );
         }
-    };
-
-    const renderSearchResults = () => {
-        if (!searchResults?.results.length) return null;
 
         return (
             <div className="mt-4">
-                <h2 className="text-lg font-semibold mb-2">Search Results:</h2>
+                <h2 className="text-lg font-semibold mb-2">{title}</h2>
                 <ul className="space-y-2">
-                    {searchResults.results.slice(0, visibleResults).map((result) => (
+                    {results.map((result) => (
                         <li key={result.uuid} className="border p-2 rounded">
-                            <h3 className="font-semibold">{result.name}</h3>
-                            <p>Box: {result.box}</p>
-                            <p>Workspace: {result.workspace}</p>
-                            {result.description && <p>Description: {result.description}</p>}
+                            <h3 className="font-semibold text-lg">{result.name}</h3>
+                            <p><span className="font-medium text-blue-600">Box:</span> {result.box}</p>
+                            <p><span className="font-medium text-green-600">Workspace:</span> {result.workspace}</p>
+                            {result.description && <p><span className="font-medium text-purple-600">Description:</span> {result.description}</p>}
                         </li>
                     ))}
                 </ul>
-                {visibleResults < searchResults.results.length && (
-                    <button
-                        onClick={() => setVisibleResults((prev) => Math.min(prev + 2, searchResults.results.length))}
-                        className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                    >
-                        See More
-                    </button>
-                )}
             </div>
         );
+    };
+
+    const renderGeneratedResults = () => {
+        if (!useAIFilter) return null;
+
+        if (!searchResults?.generated_result) {
+            return (
+                <div className="mt-4">
+                    <h2 className="text-lg font-semibold mb-2">AI Filtered Results:</h2>
+                    <p className="text-gray-600 italic">No AI filtered results available.</p>
+                </div>
+            );
+        }
+
+        try {
+            const parsedResults = JSON.parse(searchResults.generated_result);
+            return renderSearchResults(parsedResults, "AI Filtered Results:");
+        } catch (error) {
+            console.error('Error parsing generated results:', error);
+            return (
+                <div className="mt-4">
+                    <h2 className="text-lg font-semibold mb-2">AI Filtered Results:</h2>
+                    <p className="text-red-600">Error parsing generated results</p>
+                </div>
+            );
+        }
     };
 
     return (
@@ -184,8 +185,22 @@ const Search = () => {
                     </label>
                 </div>
             )}
-            {renderGeneratedResults()}
-            {renderSearchResults()}
+            {searchResults ? (
+                <>
+                    {renderGeneratedResults()}
+                    {renderSearchResults(searchResults.results.slice(0, visibleResults), "Search Results:")}
+                    {visibleResults < searchResults.results.length && (
+                        <button
+                            onClick={() => setVisibleResults((prev) => Math.min(prev + 2, searchResults.results.length))}
+                            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                        >
+                            See More
+                        </button>
+                    )}
+                </>
+            ) : (
+                <p className="mt-4 text-gray-600 italic">No search results yet. Try searching for something!</p>
+            )}
         </div>
     );
 };
