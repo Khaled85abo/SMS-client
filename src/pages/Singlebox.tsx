@@ -36,6 +36,9 @@ type Item = {
 }
 
 const SingleBox = () => {
+
+    const TIME_DELAY_BETWEEN_CAPTURES = 500;
+    let timeoutId: number | null = null;
     const { boxId, workspaceId } = useParams();
     const [getSingleBox, { data: singleBox, isLoading, isSuccess }] = useLazyGetSingleBoxQuery({});
     const [getSingleWorkspace, { data: singleWorkspace, isLoading: isWorkspaceLoading, isSuccess: isWorkspaceSuccess }] = useLazyGetSingleWorkspaceQuery({});
@@ -54,6 +57,7 @@ const SingleBox = () => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [detectBoxesNames] = useDetect_boxes_namesMutation();
     const [showCameraFeed, setShowCameraFeed] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     const openModal = (type: ActionType, item: Item | null = null) => {
         setModalType(type);
@@ -141,13 +145,19 @@ const SingleBox = () => {
     const stopLocating = () => {
         setIsLocating(false);
         setShowCameraFeed(false);
+        if (videoRef.current) {
+            videoRef.current.srcObject = null;
+        }
         if (videoRef.current && videoRef.current.srcObject) {
             const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
             tracks.forEach(track => track.stop());
         }
     };
 
-    const captureAndLocate = () => {
+    const captureAndLocate = async () => {
+        if (isProcessing || !isLocating) return;
+        setIsProcessing(true);
+
         if (videoRef.current && canvasRef.current) {
             const context = canvasRef.current.getContext('2d');
             if (context) {
@@ -156,11 +166,12 @@ const SingleBox = () => {
                 canvasRef.current.height = videoHeight;
                 context.drawImage(videoRef.current, 0, 0, videoWidth, videoHeight);
 
-                canvasRef.current.toBlob((blob) => {
+                canvasRef.current.toBlob(async (blob) => {
                     if (blob) {
                         const formData = new FormData();
                         formData.append('file', blob, 'capture.jpg');
-                        detectBoxesNames(formData).then((result) => {
+                        try {
+                            const result = await detectBoxesNames(formData)
                             if ('data' in result && result.data?.boxes) {
                                 const detectedBoxes = result.data.boxes;
                                 const matchingBox = detectedBoxes[singleBox?.name];
@@ -183,20 +194,52 @@ const SingleBox = () => {
                                     }
                                 }
                             }
-                        });
+                        }
+                        catch (error) {
+                            console.error("Error detecting boxes:", error);
+                        } finally {
+                            setIsProcessing(false);
+                            if (isLocating) {
+                                setTimeout(captureAndLocate, TIME_DELAY_BETWEEN_CAPTURES);
+                            }
+                        }
+                        // .catch((error) => {
+                        //     console.error("Error detecting boxes:", error);
+                        // })
+                        // .finally(() => {
+                        //     setIsProcessing(false);
+                        //     // Immediately start the next capture if still locating
+                        //     if (isLocating) {
+                        //         timeoutId = window.setTimeout(captureAndLocate, TIME_DELAY_BETWEEN_CAPTURES); // Adjust the delay as needed
+                        //     }
+                        // });
+                    } else {
+                        setIsProcessing(false);
+                        if (isLocating) {
+                            captureAndLocate();
+                        }
                     }
                 }, 'image/jpeg');
+            } else {
+                setIsProcessing(false);
+                if (isLocating) {
+                    captureAndLocate();
+                }
+            }
+        } else {
+            setIsProcessing(false);
+            if (isLocating) {
+                captureAndLocate();
             }
         }
     };
 
     useEffect(() => {
-        let intervalId: number | null = null;
-        if (isLocating) {
-            intervalId = window.setInterval(captureAndLocate, 2000);
+        if (isLocating && !isProcessing) {
+            captureAndLocate();
         }
         return () => {
-            if (intervalId) clearInterval(intervalId);
+            if (timeoutId) clearTimeout(timeoutId);
         };
     }, [isLocating]);
 
