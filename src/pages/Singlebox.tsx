@@ -193,7 +193,7 @@ const SingleBox = () => {
     useEffect(() => {
         let intervalId: number | null = null;
         if (isLocating) {
-            intervalId = window.setInterval(captureAndLocate, 1000);
+            intervalId = window.setInterval(captureAndLocate, 2000);
         }
         return () => {
             if (intervalId) clearInterval(intervalId);
@@ -207,7 +207,45 @@ const SingleBox = () => {
 
     return (
         <div>
-            <h3 className='m-4 text-xl font-bold'><Link to="/workspaces" className='text-blue-500'>Workspaces</Link> / <Link to={`/workspaces/${workspaceId}`} className='text-blue-500'>{singleWorkspace?.name}</Link> / {singleBox?.name}</h3>
+            <div>
+
+                <h3 className='m-4 text-xl font-bold'>
+                    <Link to="/workspaces" className='text-blue-500'>Workspaces</Link> /
+                    <Link to={`/workspaces/${workspaceId}`} className='text-blue-500'>{singleWorkspace?.name}</Link> /
+                    {singleBox?.name}
+                </h3>
+                <button
+                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 ml-4"
+                    onClick={isLocating ? stopLocating : startLocating}
+                >
+                    {isLocating ? 'Stop Locating' : 'Locate Box'}
+                </button>
+            </div>
+            {isLocating && (
+                <div className="camera-feed mt-4">
+                    <h3 className="font-bold mb-2">Camera Feed:</h3>
+                    <video
+                        ref={videoRef}
+                        style={{ display: showCameraFeed ? 'block' : 'none' }}
+                        width="640"
+                        height="480"
+                        autoPlay
+                        playsInline
+                    />
+                    <canvas
+                        ref={canvasRef}
+                        style={{ display: 'none' }}
+                        width="640"
+                        height="480"
+                    />
+                </div>
+            )}
+            {locatedBoxImage && (
+                <div className="located-box-image mt-4">
+                    <div className='flex  items-center mb-2'> <h3 className="font-bold">Located {singleBox?.name}: </h3> <button onClick={() => setLocatedBoxImage(null)} className='bg-red-500 text-white px-2 py-1 ml-2 rounded hover:bg-red-600'>Remove image</button></div>
+                    <img src={locatedBoxImage} alt="Located Box" style={{ maxWidth: '100%', height: 'auto' }} />
+                </div>
+            )}
             <h1 className='mt-4 ml-4 text-2xl font-semibold '>Items in {singleBox?.name}</h1>
             <div className=" p-4">
 
@@ -215,20 +253,12 @@ const SingleBox = () => {
             </div>
             <div className="flex justify-between items-center p-4 mb-4">
                 <h1 className="text-xl font-semibold">Items</h1>
-                <div>
-                    <button
-                        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mr-2"
-                        onClick={() => openModal(actionTypes.create)}
-                    >
-                        Add New Item
-                    </button>
-                    <button
-                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                        onClick={isLocating ? stopLocating : startLocating}
-                    >
-                        {isLocating ? 'Stop Locating' : 'Locate Box'}
-                    </button>
-                </div>
+                <button
+                    className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                    onClick={() => openModal(actionTypes.create)}
+                >
+                    Add New Item
+                </button>
             </div>
             {isLoading && <p>Loading...</p>}
             {isSuccess && singleBox.items.map((item: Item) => (
@@ -352,31 +382,7 @@ const SingleBox = () => {
                 </div>
             )}
 
-            {isLocating && (
-                <div className="camera-feed mt-4">
-                    <h3 className="font-bold mb-2">Camera Feed:</h3>
-                    <video
-                        ref={videoRef}
-                        style={{ display: showCameraFeed ? 'block' : 'none' }}
-                        width="640"
-                        height="480"
-                        autoPlay
-                        playsInline
-                    />
-                    <canvas
-                        ref={canvasRef}
-                        style={{ display: 'none' }}
-                        width="640"
-                        height="480"
-                    />
-                </div>
-            )}
-            {locatedBoxImage && (
-                <div className="located-box-image mt-4">
-                    <h3 className="font-bold">Located Box:</h3>
-                    <img src={locatedBoxImage} alt="Located Box" style={{ maxWidth: '100%', height: 'auto' }} />
-                </div>
-            )}
+
 
         </div>
     );
