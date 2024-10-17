@@ -17,54 +17,24 @@ export const ragApi = createApi({
         },
     }),
     endpoints: (builder) => ({
-        poppulate_db: builder.mutation({
+        embedDb: builder.mutation({
             query: () => ({
                 url: "populate_db",
                 method: "POST",
             }),
         }),
         search: builder.mutation({
-            query: (image) => ({
+            query: () => ({
                 url: "/search",
                 method: "POST",
-                body: image,
             }),
         }),
-        OCR_light: builder.mutation({
-            query: (image) => ({
-                url: "/ocr-light",
-                method: "POST",
-                body: image,
-            }),
-        }),
-        detect8n_img: builder.mutation({
-            query: (newItemData) => ({
-                url: "/detect-8x-img",
-                method: "POST",
-                body: newItemData,
-            }),
-        }),
-        detect8x_img: builder.mutation({
-            query: (newItemData) => ({
-                url: "/detect-8x-img",
-                method: "POST",
-                body: newItemData,
-            }),
-        }),
-        classify: builder.mutation({
-            query: (newItemData) => ({
-                url: "/classify",
-                method: "POST",
-                body: newItemData,
-            }),
-        }),
-
-
     }),
 });
 
 export const {
-
+    useEmbedDbMutation,
+    useSearchMutation,
 } = ragApi;
 
 
