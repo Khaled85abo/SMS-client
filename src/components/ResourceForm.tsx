@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 
 interface ResourceFormProps {
@@ -12,6 +12,13 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ onResourceAdded }) => {
   const [tags, setTags] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [useFileName, setUseFileName] = useState(true);
+
+  useEffect(() => {
+    if (file && useFileName) {
+      setName(file.name);
+    }
+  }, [file, useFileName]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -24,7 +31,7 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ onResourceAdded }) => {
 
     const formData = new FormData();
     const resourceData = {
-      name,
+      name: useFileName ? file.name : name,
       description,
       tags: tags.split(',').map(tag => tag.trim()),
       work_space_id: parseInt(workspaceId!, 10)
@@ -56,16 +63,29 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ onResourceAdded }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
-        <input
-          type="text"
-          id="name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-        />
+        <label className="flex items-center">
+          <input
+            type="checkbox"
+            checked={useFileName}
+            onChange={(e) => setUseFileName(e.target.checked)}
+            className="mr-2"
+          />
+          <span className="text-sm font-medium text-gray-700">Use file name as resource name</span>
+        </label>
       </div>
+      {!useFileName && (
+        <div>
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
+          <input
+            type="text"
+            id="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          />
+        </div>
+      )}
       <div>
         <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
         <textarea
@@ -104,4 +124,3 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ onResourceAdded }) => {
 };
 
 export default ResourceForm;
-
