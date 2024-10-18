@@ -105,8 +105,12 @@ const SingleWorkspace = () => {
 
     return (
         <div>
-            <h3 className='m-4 text-xl font-bold'><Link to="/workspaces" className='text-blue-500'>Workspaces</Link> / {singleWorkspace?.name}</h3>
-            <h1 className='mt-4 ml-4 text-2xl font-bold'>Boxes of {singleWorkspace?.name}</h1>
+            <div>
+
+                <h3 className='m-4 text-xl font-bold'><Link to="/workspaces" className='text-blue-500'>Workspaces</Link> / {singleWorkspace?.name}</h3>
+                <button className='bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 ml-4'>Resources</button>
+            </div>
+            <h1 className='mt-4 ml-4 text-2xl font-bold'>Boxes in {singleWorkspace?.name}</h1>
             <div className=" p-4">
 
                 <CameraDetector workspace={singleWorkspace} getSingleWorkspace={getSingleWorkspace} />
