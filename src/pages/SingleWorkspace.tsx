@@ -13,9 +13,11 @@ const actionTypes = {
 } as const;
 type ActionType = typeof actionTypes[keyof typeof actionTypes];
 
-
-
-
+// Helper function to convert bytes to megabytes
+const bytesToMB = (bytes: number): string => {
+    const mb = bytes / (1024 * 1024);
+    return mb.toFixed(2);
+};
 
 const SingleWorkspace = () => {
     const { workspaceId } = useParams();
@@ -30,8 +32,6 @@ const SingleWorkspace = () => {
     const [modalError, setModalError] = useState<string | null>(null);
     const [modalSuccess, setModalSuccess] = useState<string | null>(null);
     const [showResources, setShowResources] = useState(false);
-    const [resources, setResources] = useState<Resource[]>([]);
-    const [newResource, setNewResource] = useState({ name: '', url: '' });
     const [showResourceForm, setShowResourceForm] = useState(false);
 
     const openModal = (type: ActionType, box: Box | null = null) => {
@@ -95,21 +95,7 @@ const SingleWorkspace = () => {
         setShowResources(!showResources);
     };
 
-    const handleResourceInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setNewResource(prev => ({ ...prev, [name]: value }));
-    };
 
-    const addResource = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        const newId = resources.length > 0 ? Math.max(...resources.map(r => r.id)) + 1 : 1;
-        setResources([...resources, { ...newResource, id: newId }]);
-        setNewResource({ name: '', url: '' });
-    };
-
-    const deleteResource = (id: number) => {
-        setResources(resources.filter(resource => resource.id !== id));
-    };
 
     const toggleResourceForm = () => {
         setShowResourceForm(!showResourceForm);
@@ -167,10 +153,15 @@ const SingleWorkspace = () => {
                             {singleWorkspace.resources.map((resource: Resource) => (
                                 <li key={resource.id} className="flex justify-between items-center bg-white p-3 rounded shadow">
                                     <div>
-                                        <h3 className="font-semibold">{resource.name}</h3>
+                                        <h3 className="font-semibold">
+                                            {resource.name}
+                                            <span className="ml-2 text-sm font-normal text-gray-500">
+                                                ({resource.file_extension})
+                                            </span>
+                                        </h3>
                                         <p className="text-sm text-gray-600">{resource.description || 'No description'}</p>
                                         <p className="text-xs text-gray-500">
-                                            Type: {resource?.resource_type} | Size: {resource?.file_size} bytes
+                                            Size: {bytesToMB(resource.file_size)} MB
                                         </p>
                                         {resource.tags && (
                                             <div className="mt-1">
