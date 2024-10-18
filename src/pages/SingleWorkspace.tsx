@@ -4,6 +4,7 @@ import { useCreateBoxMutation, useUpdateBoxMutation, useRemoveBoxMutation } from
 import { useParams, Link } from 'react-router-dom';
 import CameraDetector from '../components/CameraDetector';
 import ResourceForm from '../components/ResourceForm';
+import { Box, Resource } from '../types/workspace';
 
 const actionTypes = {
     create: 'create',
@@ -12,20 +13,9 @@ const actionTypes = {
 } as const;
 type ActionType = typeof actionTypes[keyof typeof actionTypes];
 
-type Box = {
-    id: number;
-    name: string;
-    description: string;
-    items: any[];
-    work_space_id: string;
 
-}
 
-type Resource = {
-    id: number;
-    name: string;
-    url: string;
-};
+
 
 const SingleWorkspace = () => {
     const { workspaceId } = useParams();
@@ -131,6 +121,14 @@ const SingleWorkspace = () => {
         setShowResourceForm(false);
     };
 
+    // Add this function to handle resource deletion
+    const handleDeleteResource = (resourceId: number) => {
+        // TODO: Implement the API call to delete the resource
+        console.log(`Delete resource with ID: ${resourceId}`);
+        // After successful deletion, refetch the workspace data
+        getSingleWorkspace(workspaceId);
+    };
+
     // // Add this function to refetch the workspace data
     // const refetchWorkspace = useCallback(() => {
     //     if (workspaceId) {
@@ -153,7 +151,7 @@ const SingleWorkspace = () => {
             </div>
             {/* Resources Section */}
             {showResources && (
-                <div className="mt-4  p-4 bg-gray-100 rounded-lg">
+                <div className="mt-4 p-4 bg-gray-100 rounded-lg">
                     <h2 className="text-xl font-bold mb-4">Resources</h2>
                     <button
                         className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mb-4"
@@ -164,21 +162,40 @@ const SingleWorkspace = () => {
                     {showResourceForm && (
                         <ResourceForm onResourceAdded={handleResourceAdded} />
                     )}
-                    <ul>
-                        {resources.map(resource => (
-                            <li key={resource.id} className="flex justify-between items-center mb-2">
-                                <a href={resource.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-                                    {resource.name}
-                                </a>
-                                <button
-                                    onClick={() => deleteResource(resource.id)}
-                                    className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
-                                >
-                                    Delete
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
+                    {singleWorkspace?.resources && singleWorkspace.resources.length > 0 ? (
+                        <ul className="space-y-2">
+                            {singleWorkspace.resources.map((resource: Resource) => (
+                                <li key={resource.id} className="flex justify-between items-center bg-white p-3 rounded shadow">
+                                    <div>
+                                        <h3 className="font-semibold">{resource.name}</h3>
+                                        <p className="text-sm text-gray-600">{resource.description || 'No description'}</p>
+                                        <p className="text-xs text-gray-500">
+                                            Type: {resource?.resource_type} | Size: {resource?.file_size} bytes
+                                        </p>
+                                        {resource.tags && (
+                                            <div className="mt-1">
+                                                {resource.tags.map((tag, index) => (
+                                                    <span key={index} className="inline-block bg-gray-200 rounded-full px-2 py-1 text-xs font-semibold text-gray-700 mr-1">
+                                                        {tag}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <button
+                                            onClick={() => handleDeleteResource(resource.id)}
+                                            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm"
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p>No resources available.</p>
+                    )}
                 </div>
             )}
             <h1 className='mt-4 ml-4 text-2xl font-bold'>Boxes in {singleWorkspace?.name}</h1>
