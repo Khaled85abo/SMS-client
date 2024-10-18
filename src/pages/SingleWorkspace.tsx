@@ -3,6 +3,7 @@ import { useLazyGetSingleWorkspaceQuery } from "../redux/features/workspace/work
 import { useCreateBoxMutation, useUpdateBoxMutation, useRemoveBoxMutation } from "../redux/features/box/boxApi";
 import { useParams, Link } from 'react-router-dom';
 import CameraDetector from '../components/CameraDetector';
+import ResourceForm from '../components/ResourceForm';
 
 const actionTypes = {
     create: 'create',
@@ -20,6 +21,12 @@ type Box = {
 
 }
 
+type Resource = {
+    id: number;
+    name: string;
+    url: string;
+};
+
 const SingleWorkspace = () => {
     const { workspaceId } = useParams();
     const [getSingleWorkspace, { data: singleWorkspace, isLoading, isSuccess }] = useLazyGetSingleWorkspaceQuery({});
@@ -32,6 +39,10 @@ const SingleWorkspace = () => {
     const [newBox, setNewBox] = useState({ name: '', description: '', work_space_id: workspaceId });
     const [modalError, setModalError] = useState<string | null>(null);
     const [modalSuccess, setModalSuccess] = useState<string | null>(null);
+    const [showResources, setShowResources] = useState(false);
+    const [resources, setResources] = useState<Resource[]>([]);
+    const [newResource, setNewResource] = useState({ name: '', url: '' });
+    const [showResourceForm, setShowResourceForm] = useState(false);
 
     const openModal = (type: ActionType, box: Box | null = null) => {
         setModalType(type);
@@ -90,7 +101,35 @@ const SingleWorkspace = () => {
         }
     };
 
+    const toggleResources = () => {
+        setShowResources(!showResources);
+    };
 
+    const handleResourceInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setNewResource(prev => ({ ...prev, [name]: value }));
+    };
+
+    const addResource = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const newId = resources.length > 0 ? Math.max(...resources.map(r => r.id)) + 1 : 1;
+        setResources([...resources, { ...newResource, id: newId }]);
+        setNewResource({ name: '', url: '' });
+    };
+
+    const deleteResource = (id: number) => {
+        setResources(resources.filter(resource => resource.id !== id));
+    };
+
+    const toggleResourceForm = () => {
+        setShowResourceForm(!showResourceForm);
+    };
+
+    const handleResourceAdded = () => {
+        // Refetch resources or update state as needed
+        getSingleWorkspace(workspaceId);
+        setShowResourceForm(false);
+    };
 
     // // Add this function to refetch the workspace data
     // const refetchWorkspace = useCallback(() => {
@@ -108,8 +147,40 @@ const SingleWorkspace = () => {
             <div>
 
                 <h3 className='m-4 text-xl font-bold'><Link to="/workspaces" className='text-blue-500'>Workspaces</Link> / {singleWorkspace?.name}</h3>
-                <button className='bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 ml-4'>Resources</button>
+                <button className='bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 ml-4' onClick={toggleResources}>
+                    {showResources ? 'Hide Resources' : 'Show Resources'}
+                </button>
             </div>
+            {/* Resources Section */}
+            {showResources && (
+                <div className="mt-4 ml-4 p-4 bg-gray-100 rounded-lg">
+                    <h2 className="text-xl font-bold mb-4">Resources</h2>
+                    <button
+                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mb-4"
+                        onClick={toggleResourceForm}
+                    >
+                        {showResourceForm ? 'Hide Resource Form' : 'Add New Resource'}
+                    </button>
+                    {showResourceForm && (
+                        <ResourceForm onResourceAdded={handleResourceAdded} />
+                    )}
+                    <ul>
+                        {resources.map(resource => (
+                            <li key={resource.id} className="flex justify-between items-center mb-2">
+                                <a href={resource.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                                    {resource.name}
+                                </a>
+                                <button
+                                    onClick={() => deleteResource(resource.id)}
+                                    className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                                >
+                                    Delete
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
             <h1 className='mt-4 ml-4 text-2xl font-bold'>Boxes in {singleWorkspace?.name}</h1>
             <div className=" p-4">
 
@@ -151,6 +222,8 @@ const SingleWorkspace = () => {
                     {/* <p className="mt-2 text-gray-600">{workspace.description}</p> */}
                 </div>
             ))}
+
+
 
             {/* Modal */}
             {modalOpen && (
