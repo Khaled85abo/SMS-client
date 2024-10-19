@@ -8,6 +8,7 @@ import ResourceForm from '../components/ResourceForm';
 import { Box, Resource } from '../types/workspace';
 import { useSelector } from 'react-redux';
 import { RootState } from '../redux/store';
+import { createSelector } from '@reduxjs/toolkit';
 
 const actionTypes = {
     create: 'create',
@@ -21,6 +22,13 @@ const bytesToMB = (bytes: number): string => {
     const mb = bytes / (1024 * 1024);
     return mb.toFixed(2);
 };
+
+// Add this selector outside of the component
+const selectWorkspaceResources = createSelector(
+    (state: RootState) => state.resource.resources,
+    (_, workspaceId: string | undefined) => workspaceId,
+    (resources, workspaceId) => resources[workspaceId] || []
+);
 
 const SingleWorkspace = () => {
     const { workspaceId } = useParams();
@@ -39,8 +47,10 @@ const SingleWorkspace = () => {
     const [showResources, setShowResources] = useState(false);
     const [showResourceForm, setShowResourceForm] = useState(false);
 
-    // Add this line to get the workspaceResources from the Redux state
-    const workspaceResources = useSelector((state: RootState) => state.resource.resources[workspaceId] || []);
+    // Replace the existing useSelector call with this:
+    const workspaceResources = useSelector((state: RootState) =>
+        selectWorkspaceResources(state, workspaceId)
+    );
 
     const openModal = (type: ActionType, box: Box | null = null) => {
         setModalType(type);

@@ -17,8 +17,6 @@ import NotFound from "./pages/NotFound";
 import { Provider } from "react-redux";
 import { store } from "./redux/store";
 import { useAppSelector } from "./hooks/redux";
-import Wardrobe from "./pages/Wardrobe";
-import AddClothingItem from "./pages/AddClothingItem";
 import Workspaces from "./pages/Workspaces";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
@@ -34,6 +32,7 @@ import Workspace from "./pages/SingleWorkspace";
 import SingleBox from "./pages/Singlebox";
 import Item from "./pages/Item";
 import Search from "./pages/Seach";
+import { useGetWorkspacesQuery } from "./redux/features/workspace/workspaceApi";
 
 const ProtectedRoutes = () => {
   const location = useLocation();
@@ -47,6 +46,8 @@ const ProtectedRoutes = () => {
 };
 
 function App() {
+
+  const { refetch: getWorkspaces } = useGetWorkspacesQuery({});
   const theme = useAppSelector((state) => state.theme.theme);
   const token = useAppSelector((state) => state.auth.token);
   const user = useAppSelector((state) => state.auth.user);
@@ -73,6 +74,8 @@ function App() {
   useEffect(() => {
     if (token) {
       getUserInfo();
+      // getWorkspaces();
+
     }
   }, []);
 
@@ -98,11 +101,6 @@ function App() {
           <Route path="/workspaces/:workspaceId/:boxId/:itemId" element={<Item />}></Route>
           <Route path="/profile" element={<Profile />}></Route>
           <Route path="/search" element={<Search />}></Route>
-          {/* <Route path="/wardrobe" element={<Wardrobe />}></Route> */}
-          {/* <Route
-            path="/add-clothing-item"
-            element={<AddClothingItem />}
-          ></Route> */}
         </Route>
         <Route path="/login" element={<Login />}></Route>
         <Route path="/signup" element={<Signup />}></Route>
