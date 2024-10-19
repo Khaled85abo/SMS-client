@@ -64,12 +64,12 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ onResourceAdded }) => {
             onChange={(e) => setUseFileName(e.target.checked)}
             className="mr-2"
           />
-          <span className="text-sm font-medium text-gray-700">Use file name as resource name</span>
+          <span className="text-sm font-medium text-gray-900">Use file name as resource name</span>
         </label>
       </div>
       {!useFileName && (
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
+          <label htmlFor="name" className="block text-sm font-medium text-gray-900">Name</label>
           <input
             type="text"
             id="name"
@@ -81,7 +81,7 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ onResourceAdded }) => {
         </div>
       )}
       <div>
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
+        <label htmlFor="description" className="block text-sm font-medium text-gray-900">Description</label>
         <textarea
           id="description"
           value={description}
@@ -90,7 +90,7 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ onResourceAdded }) => {
         />
       </div>
       <div>
-        <label htmlFor="tags" className="block text-sm font-medium text-gray-700">Tags (comma-separated)</label>
+        <label htmlFor="tags" className="block text-sm font-medium text-gray-900">Tags (comma-separated)</label>
         <input
           type="text"
           id="tags"
@@ -100,7 +100,7 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ onResourceAdded }) => {
         />
       </div>
       <div>
-        <label htmlFor="file" className="block text-sm font-medium text-gray-700">File</label>
+        <label htmlFor="file" className="block text-sm font-medium text-gray-900">File</label>
         <input
           type="file"
           id="file"
@@ -115,7 +115,7 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ onResourceAdded }) => {
           {(apiError as any).data?.message || 'An error occurred'}
         </p>
       )}
-      <button type="submit" className="bg-green-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" disabled={isLoading}>
+      <button type="submit" className="bg-green-500  text-white font-bold py-2 px-4 rounded" disabled={isLoading}>
         {isLoading ? 'Adding...' : 'Add Resource'}
       </button>
     </form>

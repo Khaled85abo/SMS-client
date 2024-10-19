@@ -24,7 +24,6 @@ const bytesToMB = (bytes: number): string => {
 
 const SingleWorkspace = () => {
     const { workspaceId } = useParams();
-    const resources = useSelector((state: RootState) => state.resource.resources);
     const [deleteResource, { isLoading: isDeletingResource }] = useDeleteResourceMutation();
     const [getWorkspaceResources] = useLazyGetWorkspaceResourcesQuery();
     const [getSingleWorkspace, { data: singleWorkspace, isLoading, isSuccess }] = useLazyGetSingleWorkspaceQuery({});
