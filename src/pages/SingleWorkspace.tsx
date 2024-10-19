@@ -23,12 +23,20 @@ const bytesToMB = (bytes: number): string => {
     return mb.toFixed(2);
 };
 
-// Add this selector outside of the component
+const selectWorkspacesResources = (state: RootState) => state.resource.resources;
+const selectWorkspaceId = (state: RootState, workspaceId: string | undefined) => workspaceId;
 const selectWorkspaceResources = createSelector(
-    (state: RootState) => state.resource.resources,
-    (_, workspaceId: string | undefined) => workspaceId,
+    [selectWorkspacesResources, selectWorkspaceId],
     (resources, workspaceId) => resources[workspaceId] || []
-);
+)
+
+
+// Add this selector outside of the component
+// const selectWorkspaceResources = createSelector(
+//     (state: RootState) => state.resource.resources,
+//     (_, workspaceId: string | undefined) => workspaceId,
+//     (resources, workspaceId) => resources[workspaceId] || []
+// );
 
 const SingleWorkspace = () => {
     const { workspaceId } = useParams();

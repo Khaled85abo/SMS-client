@@ -55,7 +55,7 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ onResourceAdded }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 mb-4">
+    <form onSubmit={handleSubmit} className="space-y-4 mb-4 bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
       <div>
         <label className="flex items-center">
           <input
