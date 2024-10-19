@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-
+import { useAddResourceMutation } from '../redux/features/resource/resourceApi';
 interface ResourceFormProps {
   onResourceAdded: () => void;
 }
 
 const ResourceForm: React.FC<ResourceFormProps> = ({ onResourceAdded }) => {
+  const [addResource, { isLoading, isSuccess, error }] = useAddResourceMutation();
   const { workspaceId } = useParams<{ workspaceId: string }>();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
