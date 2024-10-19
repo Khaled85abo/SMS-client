@@ -1,8 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useLazyGetSingleWorkspaceQuery } from "../redux/features/workspace/workspaceApi";
 import { useCreateBoxMutation, useUpdateBoxMutation, useRemoveBoxMutation } from "../redux/features/box/boxApi";
+import { useDeleteResourceMutation, useLazyGetWorkspaceResourcesQuery } from "../redux/features/resource/resourceApi";
 import { useParams, Link } from 'react-router-dom';
 import CameraDetector from '../components/CameraDetector';
+import ResourceForm from '../components/ResourceForm';
+import { Box, Resource } from '../types/workspace';
+import { useSelector } from 'react-redux';
+import { RootState } from '../redux/store';
 
 const actionTypes = {
     create: 'create',
@@ -11,17 +16,17 @@ const actionTypes = {
 } as const;
 type ActionType = typeof actionTypes[keyof typeof actionTypes];
 
-type Box = {
-    id: number;
-    name: string;
-    description: string;
-    items: any[];
-    work_space_id: string;
-
-}
+// Helper function to convert bytes to megabytes
+const bytesToMB = (bytes: number): string => {
+    const mb = bytes / (1024 * 1024);
+    return mb.toFixed(2);
+};
 
 const SingleWorkspace = () => {
     const { workspaceId } = useParams();
+    const resources = useSelector((state: RootState) => state.resource.resources);
+    const [deleteResource, { isLoading: isDeletingResource }] = useDeleteResourceMutation();
+    const [getWorkspaceResources] = useLazyGetWorkspaceResourcesQuery();
     const [getSingleWorkspace, { data: singleWorkspace, isLoading, isSuccess }] = useLazyGetSingleWorkspaceQuery({});
     const [createBox, { isLoading: isCreating }] = useCreateBoxMutation();
     const [updateBox, { isLoading: isUpdating }] = useUpdateBoxMutation();
@@ -32,6 +37,11 @@ const SingleWorkspace = () => {
     const [newBox, setNewBox] = useState({ name: '', description: '', work_space_id: workspaceId });
     const [modalError, setModalError] = useState<string | null>(null);
     const [modalSuccess, setModalSuccess] = useState<string | null>(null);
+    const [showResources, setShowResources] = useState(false);
+    const [showResourceForm, setShowResourceForm] = useState(false);
+
+    // Add this line to get the workspaceResources from the Redux state
+    const workspaceResources = useSelector((state: RootState) => state.resource.resources[workspaceId] || []);
 
     const openModal = (type: ActionType, box: Box | null = null) => {
         setModalType(type);
@@ -90,23 +100,108 @@ const SingleWorkspace = () => {
         }
     };
 
+    const toggleResources = () => {
+        setShowResources(!showResources);
+    };
 
 
-    // // Add this function to refetch the workspace data
-    // const refetchWorkspace = useCallback(() => {
-    //     if (workspaceId) {
-    //         getSingleWorkspace(workspaceId);
-    //     }
-    // }, [workspaceId, getSingleWorkspace]);
+
+    const toggleResourceForm = () => {
+        setShowResourceForm(!showResourceForm);
+    };
+
+    const handleResourceAdded = () => {
+        // Refetch resources or update state as needed
+        getWorkspaceResources(workspaceId);
+        setShowResourceForm(false);
+    };
+
+    // Add this function to handle resource deletion
+    const handleDeleteResource = (resourceId: number) => {
+        // TODO: Implement the API call to delete the resource
+        console.log(`Delete resource with ID: ${resourceId}`);
+        deleteResource(resourceId)
+            .unwrap()
+            .then(() => {
+                setModalSuccess('Resource deleted successfully!');
+                getWorkspaceResources(workspaceId);
+            })
+
+    };
+
 
     useEffect(() => {
         getSingleWorkspace(workspaceId);
+        getWorkspaceResources(workspaceId);
     }, [workspaceId]);
+
 
     return (
         <div>
-            <h3 className='m-4 text-xl font-bold'><Link to="/workspaces" className='text-blue-500'>Workspaces</Link> / {singleWorkspace?.name}</h3>
-            <h1 className='mt-4 ml-4 text-2xl font-bold'>Boxes of {singleWorkspace?.name}</h1>
+            <div>
+
+                <h3 className='m-4 text-xl font-bold'><Link to="/workspaces" className='text-blue-500'>Workspaces</Link> / {singleWorkspace?.name}</h3>
+                <button className='bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 ml-4' onClick={toggleResources}>
+                    {showResources ? 'Hide Resources' : 'Show Resources'}
+                </button>
+            </div>
+            {/* Resources Section */}
+            {showResources && (
+                <div className="mt-4 p-4 bg-gray-100 rounded-lg">
+                    <h2 className="text-xl font-bold mb-4">Resources</h2>
+                    <button
+                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mb-4"
+                        onClick={toggleResourceForm}
+                    >
+                        {showResourceForm ? 'Hide Resource Form' : 'Add New Resource'}
+                    </button>
+                    {showResourceForm && (
+                        <ResourceForm
+                            onResourceAdded={handleResourceAdded}
+                        />
+                    )}
+                    {workspaceResources && workspaceResources.length > 0 ? (
+                        <ul className="space-y-2">
+                            {workspaceResources.map((resource: Resource) => (
+                                <li key={resource.id} className="flex justify-between items-center bg-white p-3 rounded shadow">
+                                    <div>
+                                        <h3 className="font-semibold">
+                                            {resource.name}
+                                            <span className="ml-2 text-sm font-normal text-gray-500">
+                                                ({resource.file_extension})
+                                            </span>
+                                        </h3>
+                                        <p className="text-sm text-gray-600">{resource.description || 'No description'}</p>
+                                        <p className="text-xs text-gray-500">
+                                            Size: {bytesToMB(resource.file_size)} MB
+                                        </p>
+                                        {resource.tags && (
+                                            <div className="mt-1">
+                                                {resource.tags.map((tag, index) => (
+                                                    <span key={index} className="inline-block bg-gray-200 rounded-full px-2 py-1 text-xs font-semibold text-gray-700 mr-1">
+                                                        {tag}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <button
+                                            onClick={() => handleDeleteResource(resource.id)}
+                                            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm"
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p>No resources available.</p>
+                    )}
+                </div>
+            )}
+            <h1 className='mt-4 ml-4 text-2xl font-bold'>Boxes in {singleWorkspace?.name}</h1>
             <div className=" p-4">
 
                 <CameraDetector workspace={singleWorkspace} getSingleWorkspace={getSingleWorkspace} />
@@ -147,6 +242,8 @@ const SingleWorkspace = () => {
                     {/* <p className="mt-2 text-gray-600">{workspace.description}</p> */}
                 </div>
             ))}
+
+
 
             {/* Modal */}
             {modalOpen && (

@@ -79,10 +79,14 @@ export const authApi = createApi({
     uploadProfileImage: builder.mutation({
       query: (data) => ({ url: "/profiles/img", body: data, method: "POST" }),
     }),
+    resources: builder.query({
+      query: () => "/resources",
+    }),
   }),
 });
 
 export const {
+  useResourcesQuery,
   useLazyRefreshTokenQuery,
   useMeQuery,
   useLazyMeQuery,

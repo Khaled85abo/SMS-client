@@ -184,8 +184,8 @@ const SingleBox = () => {
 
                                     context.beginPath();
                                     context.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-                                    context.strokeStyle = 'red';
-                                    context.lineWidth = 3;
+                                    context.strokeStyle = 'yellow';
+                                    context.lineWidth = 6;
                                     context.stroke();
 
                                     if (canvasRef.current) {

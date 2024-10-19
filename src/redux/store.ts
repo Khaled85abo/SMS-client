@@ -11,6 +11,8 @@ import themeSlice from "./features/theme/themeSlice";
 import authSlice from "./features/auth/authSlice";
 import { authApi } from "./features/auth/authApi";
 import { ragApi } from "./features/rag/ragApi";
+import resourceSlice from "./features/resource/resourceSlice";
+import { resourceApi } from "./features/resource/resourceApi";
 export const store = configureStore({
   reducer: {
     theme: themeSlice,
@@ -18,15 +20,17 @@ export const store = configureStore({
     workspace: workspaceSlice,
     box: boxSlice,
     item: itemSlice,
+    resource: resourceSlice,
     [authApi.reducerPath]: authApi.reducer,
     [workspaceApi.reducerPath]: workspaceApi.reducer,
     [boxApi.reducerPath]: boxApi.reducer,
     [itemApi.reducerPath]: itemApi.reducer,
     [detectApi.reducerPath]: detectApi.reducer,
     [ragApi.reducerPath]: ragApi.reducer,
+    [resourceApi.reducerPath]: resourceApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(authApi.middleware, workspaceApi.middleware, boxApi.middleware, itemApi.middleware, detectApi.middleware, ragApi.middleware),
+    getDefaultMiddleware().concat(authApi.middleware, workspaceApi.middleware, boxApi.middleware, itemApi.middleware, detectApi.middleware, ragApi.middleware, resourceApi.middleware),
 });
 
 // Infer the `RootState` and `AppDispatch` types from the store itself

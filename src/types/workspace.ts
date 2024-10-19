@@ -32,7 +32,24 @@ export const WORKSPACE_ROLE = {
     VIEWER: "viewer"
 } as const
 
-export type workspaceRoleType = typeof WORKSPACE_ROLE[keyof typeof WORKSPACE_ROLE];
+
+export type Resource = {
+    "id": number,
+    "name": string,
+    "resource_type": string,
+    "file_path": string,
+    "file_size": number,
+    "file_extension": string,
+    "description": string | null,
+    "tags": string[] | null,
+    "version": number,
+    "work_space_id": number,
+    "user_id": number,
+    "created_date": string,
+    "updated_date": string | null
+}
+
+export type WorkspaceRoleType = typeof WORKSPACE_ROLE[keyof typeof WORKSPACE_ROLE];
 
 export type Workspace = {
     "name": string,
@@ -41,6 +58,7 @@ export type Workspace = {
     "created_date": string,
     "updated_date": string | null,
     "role": WorkspaceRoleType,
-    "id": number
+    "id": number,
+    "resources": Resource[]
 }
 

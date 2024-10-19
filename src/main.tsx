@@ -83,7 +83,7 @@ function App() {
         console.log("inside if statement refresh token");
         refreshToken({});
       }
-    }, 120 * 1000);
+    }, 300 * 1000);
     return () => clearInterval(intervalId);
   }, [user]);
   return (
