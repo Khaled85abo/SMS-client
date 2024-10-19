@@ -11,6 +11,7 @@ import themeSlice from "./features/theme/themeSlice";
 import authSlice from "./features/auth/authSlice";
 import { authApi } from "./features/auth/authApi";
 import { ragApi } from "./features/rag/ragApi";
+import resourceSlice from "./features/resource/resourceSlice";
 import { resourceApi } from "./features/resource/resourceApi";
 export const store = configureStore({
   reducer: {
@@ -19,6 +20,7 @@ export const store = configureStore({
     workspace: workspaceSlice,
     box: boxSlice,
     item: itemSlice,
+    resource: resourceSlice,
     [authApi.reducerPath]: authApi.reducer,
     [workspaceApi.reducerPath]: workspaceApi.reducer,
     [boxApi.reducerPath]: boxApi.reducer,

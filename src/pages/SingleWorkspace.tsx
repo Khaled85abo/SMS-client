@@ -6,6 +6,8 @@ import { useParams, Link } from 'react-router-dom';
 import CameraDetector from '../components/CameraDetector';
 import ResourceForm from '../components/ResourceForm';
 import { Box, Resource } from '../types/workspace';
+import { useSelector } from 'react-redux';
+import { RootState } from '../redux/store';
 
 const actionTypes = {
     create: 'create',
@@ -22,8 +24,9 @@ const bytesToMB = (bytes: number): string => {
 
 const SingleWorkspace = () => {
     const { workspaceId } = useParams();
+    const resources = useSelector((state: RootState) => state.resource.resources);
     const [deleteResource, { isLoading: isDeletingResource }] = useDeleteResourceMutation();
-    const [getWorkspaceResources, { data: workspaceResources, isLoading: isLoadingResources, isSuccess: isSuccessResources }] = useLazyGetWorkspaceResourcesQuery({});
+    const [getWorkspaceResources] = useLazyGetWorkspaceResourcesQuery();
     const [getSingleWorkspace, { data: singleWorkspace, isLoading, isSuccess }] = useLazyGetSingleWorkspaceQuery({});
     const [createBox, { isLoading: isCreating }] = useCreateBoxMutation();
     const [updateBox, { isLoading: isUpdating }] = useUpdateBoxMutation();
@@ -36,6 +39,9 @@ const SingleWorkspace = () => {
     const [modalSuccess, setModalSuccess] = useState<string | null>(null);
     const [showResources, setShowResources] = useState(false);
     const [showResourceForm, setShowResourceForm] = useState(false);
+
+    // Add this line to get the workspaceResources from the Redux state
+    const workspaceResources = useSelector((state: RootState) => state.resource.resources[workspaceId] || []);
 
     const openModal = (type: ActionType, box: Box | null = null) => {
         setModalType(type);
@@ -106,7 +112,7 @@ const SingleWorkspace = () => {
 
     const handleResourceAdded = () => {
         // Refetch resources or update state as needed
-        getSingleWorkspace(workspaceId);
+        getWorkspaceResources(workspaceId);
         setShowResourceForm(false);
     };
 
@@ -118,21 +124,17 @@ const SingleWorkspace = () => {
             .unwrap()
             .then(() => {
                 setModalSuccess('Resource deleted successfully!');
-                getSingleWorkspace(workspaceId);
+                getWorkspaceResources(workspaceId);
             })
 
     };
 
-    // // Add this function to refetch the workspace data
-    // const refetchWorkspace = useCallback(() => {
-    //     if (workspaceId) {
-    //         getSingleWorkspace(workspaceId);
-    //     }
-    // }, [workspaceId, getSingleWorkspace]);
 
     useEffect(() => {
         getSingleWorkspace(workspaceId);
+        getWorkspaceResources(workspaceId);
     }, [workspaceId]);
+
 
     return (
         <div>
@@ -158,9 +160,9 @@ const SingleWorkspace = () => {
                             onResourceAdded={handleResourceAdded}
                         />
                     )}
-                    {singleWorkspace?.resources && singleWorkspace.resources.length > 0 ? (
+                    {workspaceResources && workspaceResources.length > 0 ? (
                         <ul className="space-y-2">
-                            {singleWorkspace.resources.map((resource: Resource) => (
+                            {workspaceResources.map((resource: Resource) => (
                                 <li key={resource.id} className="flex justify-between items-center bg-white p-3 rounded shadow">
                                     <div>
                                         <h3 className="font-semibold">

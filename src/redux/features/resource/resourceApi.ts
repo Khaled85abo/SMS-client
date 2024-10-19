@@ -1,6 +1,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import config from "../../../config";
 import { RootState } from "../../store";
+import { setWorkspaceResources } from "./resourceSlice";
 
 export const resourceApi = createApi({
     reducerPath: "resourceApi",
@@ -30,6 +31,16 @@ export const resourceApi = createApi({
         }),
         getWorkspaceResources: builder.query({
             query: (workspaceId) => `/workspace/${workspaceId}`,
+            onQueryStarted: async (_, { queryFulfilled, dispatch }) => {
+                try {
+                    const { data } = await queryFulfilled;
+                    console.log("recieved data from getWorkspaceResources: ", data);
+                    dispatch(setWorkspaceResources(data));
+
+                } catch (error) {
+                    console.log("error fetching workspace resources: ", error);
+                }
+            },
             providesTags: ["Resources"],
         }),
         getSingleResource: builder.query({

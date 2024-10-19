@@ -115,7 +115,7 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ onResourceAdded }) => {
           {(apiError as any).data?.message || 'An error occurred'}
         </p>
       )}
-      <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" disabled={isLoading}>
+      <button type="submit" className="bg-green-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" disabled={isLoading}>
         {isLoading ? 'Adding...' : 'Add Resource'}
       </button>
     </form>
