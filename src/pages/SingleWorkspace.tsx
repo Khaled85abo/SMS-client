@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLazyGetSingleWorkspaceQuery } from "../redux/features/workspace/workspaceApi";
 import { useCreateBoxMutation, useUpdateBoxMutation, useRemoveBoxMutation } from "../redux/features/box/boxApi";
+import { useDeleteResourceMutation, useLazyGetWorkspaceResourcesQuery } from "../redux/features/resource/resourceApi";
 import { useParams, Link } from 'react-router-dom';
 import CameraDetector from '../components/CameraDetector';
 import ResourceForm from '../components/ResourceForm';
@@ -21,6 +22,8 @@ const bytesToMB = (bytes: number): string => {
 
 const SingleWorkspace = () => {
     const { workspaceId } = useParams();
+    const [deleteResource, { isLoading: isDeletingResource }] = useDeleteResourceMutation();
+    const [getWorkspaceResources, { data: workspaceResources, isLoading: isLoadingResources, isSuccess: isSuccessResources }] = useLazyGetWorkspaceResourcesQuery({});
     const [getSingleWorkspace, { data: singleWorkspace, isLoading, isSuccess }] = useLazyGetSingleWorkspaceQuery({});
     const [createBox, { isLoading: isCreating }] = useCreateBoxMutation();
     const [updateBox, { isLoading: isUpdating }] = useUpdateBoxMutation();
@@ -111,8 +114,13 @@ const SingleWorkspace = () => {
     const handleDeleteResource = (resourceId: number) => {
         // TODO: Implement the API call to delete the resource
         console.log(`Delete resource with ID: ${resourceId}`);
-        // After successful deletion, refetch the workspace data
-        getSingleWorkspace(workspaceId);
+        deleteResource(resourceId)
+            .unwrap()
+            .then(() => {
+                setModalSuccess('Resource deleted successfully!');
+                getSingleWorkspace(workspaceId);
+            })
+
     };
 
     // // Add this function to refetch the workspace data
@@ -146,7 +154,9 @@ const SingleWorkspace = () => {
                         {showResourceForm ? 'Hide Resource Form' : 'Add New Resource'}
                     </button>
                     {showResourceForm && (
-                        <ResourceForm onResourceAdded={handleResourceAdded} />
+                        <ResourceForm
+                            onResourceAdded={handleResourceAdded}
+                        />
                     )}
                     {singleWorkspace?.resources && singleWorkspace.resources.length > 0 ? (
                         <ul className="space-y-2">

@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAddResourceMutation } from '../redux/features/resource/resourceApi';
+
 interface ResourceFormProps {
   onResourceAdded: () => void;
+
 }
 
 const ResourceForm: React.FC<ResourceFormProps> = ({ onResourceAdded }) => {
-  const [addResource, { isLoading, isSuccess, error }] = useAddResourceMutation();
+  const [addResource, { isLoading, isSuccess, error: apiError }] = useAddResourceMutation();
   const { workspaceId } = useParams<{ workspaceId: string }>();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -30,27 +32,18 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ onResourceAdded }) => {
       return;
     }
 
+
     const formData = new FormData();
     const resourceData = {
       name: useFileName ? file.name : name,
-      description,
-      tags: tags.split(',').map(tag => tag.trim()),
-      work_space_id: parseInt(workspaceId!, 10)
+      work_space_id: workspaceId
     };
 
     formData.append('resource', JSON.stringify(resourceData));
     formData.append('file', file);
 
     try {
-      const response = await fetch('/api/resources/', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to add resource');
-      }
-
+      await addResource(formData).unwrap();
       setName('');
       setDescription('');
       setTags('');
@@ -62,7 +55,7 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ onResourceAdded }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4 mb-4">
       <div>
         <label className="flex items-center">
           <input
@@ -117,8 +110,13 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ onResourceAdded }) => {
         />
       </div>
       {error && <p className="text-red-500">{error}</p>}
-      <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-        Add Resource
+      {apiError && (
+        <p className="text-red-500">
+          {(apiError as any).data?.message || 'An error occurred'}
+        </p>
+      )}
+      <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" disabled={isLoading}>
+        {isLoading ? 'Adding...' : 'Add Resource'}
       </button>
     </form>
   );
