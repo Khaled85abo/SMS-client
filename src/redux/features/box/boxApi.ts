@@ -5,7 +5,7 @@ import { RootState } from "../../store";
 export const boxApi = createApi({
     reducerPath: "boxApi",
     baseQuery: fetchBaseQuery({
-        baseUrl: `${config.BACKEND_URL}/v1/boxes`,
+        baseUrl: `${config.BACKEND_URL}/v1/boxes/`,
         prepareHeaders: (headers, { getState }) => {
             // Get the token from the state
             const token = (getState() as RootState).auth.token;
@@ -23,7 +23,7 @@ export const boxApi = createApi({
             providesTags: ["Boxes"],
         }),
         getSingleBox: builder.query({
-            query: (boxId) => `/${boxId}`,
+            query: (boxId) => `${boxId}`,
             providesTags: (result, error, boxId) => [{ type: "SingleBox", id: boxId }],
         }),
         createBox: builder.mutation({
@@ -35,14 +35,14 @@ export const boxApi = createApi({
             invalidatesTags: ["Boxes"],
         }),
         updateBox: builder.mutation({
-            query: (body) => ({ url: `/${body.id}`, body: body.data, method: "PUT" }),
+            query: (body) => ({ url: `${body.id}`, body: body.data, method: "PUT" }),
             invalidatesTags: (result, error, arg) => [
                 "Boxes",
                 { type: "SingleBox", id: arg.id },
             ],
         }),
         removeBox: builder.mutation({
-            query: (boxId) => ({ url: `/${boxId}`, method: "DELETE" }),
+            query: (boxId) => ({ url: `${boxId}`, method: "DELETE" }),
             invalidatesTags: (result, error, boxId) => [
                 "Boxes",
                 { type: "SingleBox", id: boxId },

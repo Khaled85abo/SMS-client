@@ -5,7 +5,7 @@ import { RootState } from "../../store";
 export const itemApi = createApi({
     reducerPath: "itemApi",
     baseQuery: fetchBaseQuery({
-        baseUrl: `${config.BACKEND_URL}/v1/items`,
+        baseUrl: `${config.BACKEND_URL}/v1/items/`,
         prepareHeaders: (headers, { getState }) => {
             // Get the token from the state
             const token = (getState() as RootState).auth.token;
@@ -23,7 +23,7 @@ export const itemApi = createApi({
             providesTags: ["Items"],
         }),
         getSingleItem: builder.query({
-            query: (itemId) => `/${itemId}`,
+            query: (itemId) => `${itemId}`,
             providesTags: (result, error, itemId) => [{ type: "SingleItem", id: itemId }],
         }),
         createItem: builder.mutation({
@@ -35,14 +35,14 @@ export const itemApi = createApi({
             invalidatesTags: ["Items"],
         }),
         updateItem: builder.mutation({
-            query: (body) => ({ url: `/${body.id}`, body: body.data, method: "PUT" }),
+            query: (body) => ({ url: `${body.id}`, body: body.data, method: "PUT" }),
             invalidatesTags: (result, error, arg) => [
                 "Items",
                 { type: "SingleItem", id: arg.id },
             ],
         }),
         removeItem: builder.mutation({
-            query: (itemId) => ({ url: `/${itemId}`, method: "DELETE" }),
+            query: (itemId) => ({ url: `${itemId}`, method: "DELETE" }),
             invalidatesTags: (result, error, itemId) => [
                 "Items",
                 { type: "SingleItem", id: itemId },

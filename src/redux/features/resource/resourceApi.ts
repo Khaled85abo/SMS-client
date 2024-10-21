@@ -6,7 +6,7 @@ import { setWorkspaceResources } from "./resourceSlice";
 export const resourceApi = createApi({
     reducerPath: "resourceApi",
     baseQuery: fetchBaseQuery({
-        baseUrl: `${config.BACKEND_URL}/v1/resources`,
+        baseUrl: `${config.BACKEND_URL}/v1/resources/`,
         prepareHeaders: (headers, { getState }) => {
             const token = (getState() as RootState).auth.token;
             if (token) {
@@ -30,7 +30,7 @@ export const resourceApi = createApi({
             providesTags: ["Resources"],
         }),
         getWorkspaceResources: builder.query({
-            query: (workspaceId) => `/workspace/${workspaceId}`,
+            query: (workspaceId) => `workspace/${workspaceId}`,
             onQueryStarted: async (_, { queryFulfilled, dispatch }) => {
                 try {
                     const { data } = await queryFulfilled;
@@ -44,12 +44,12 @@ export const resourceApi = createApi({
             providesTags: ["Resources"],
         }),
         getSingleResource: builder.query({
-            query: (resourceId) => `/${resourceId}`,
+            query: (resourceId) => `${resourceId}`,
             providesTags: (result, error, resourceId) => [{ type: "SingleResource", id: resourceId }],
         }),
         deleteResource: builder.mutation({
             query: (resourceId) => ({
-                url: `/${resourceId}`,
+                url: `${resourceId}`,
                 method: "DELETE",
             }),
             invalidatesTags: (result, error, resourceId) => [{ type: "Resources", id: resourceId }],

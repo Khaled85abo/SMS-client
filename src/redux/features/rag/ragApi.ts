@@ -5,7 +5,7 @@ import { RootState } from "../../store";
 export const ragApi = createApi({
     reducerPath: "ragApi",
     baseQuery: fetchBaseQuery({
-        baseUrl: `${config.BACKEND_URL}/v1/rag`,
+        baseUrl: `${config.BACKEND_URL}/v1/rag/`,
         prepareHeaders: (headers, { getState }) => {
             // Get the token from the state
             const token = (getState() as RootState).auth.token;
@@ -19,13 +19,13 @@ export const ragApi = createApi({
     endpoints: (builder) => ({
         embedDb: builder.mutation({
             query: () => ({
-                url: "populate_db",
+                url: "populate_db/",
                 method: "POST",
             }),
         }),
         search: builder.mutation({
             query: (body) => ({
-                url: "/search",
+                url: "search/",
                 method: "POST",
                 body: body,
             }),
