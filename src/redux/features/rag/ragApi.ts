@@ -7,14 +7,17 @@ export const ragApi = createApi({
     baseQuery: fetchBaseQuery({
         baseUrl: `${config.BACKEND_URL}/v1/rag`,
         prepareHeaders: (headers, { getState }) => {
-            // Get the token from the state
             const token = (getState() as RootState).auth.token;
-            // If there is a token, add it to the headers
             if (token) {
-                headers.set("authorization", `bearer ${token}`);
+                headers.set("authorization", `Bearer ${token}`);
             }
+            // Add required headers for CORS
+            headers.set("Accept", "application/json");
+            headers.set("Content-Type", "application/json");
             return headers;
         },
+        // Enable credentials for cross-origin requests
+        credentials: "include",
     }),
     endpoints: (builder) => ({
         embedDb: builder.mutation({

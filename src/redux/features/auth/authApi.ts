@@ -3,64 +3,111 @@ import config from "../../../config";
 import { setToken, setUser } from "./authSlice";
 import { RootState } from "../../store";
 
+// Define types for better type safety
+interface LoginResponse {
+  token: string;
+  // add other response fields as needed
+}
+
+interface User {
+  // define user properties
+  id: string;
+  email: string;
+  // ... other user properties
+}
+
+interface ResetPasswordRequest {
+  body: {
+    password: string;
+    confirmPassword: string;
+  };
+  token: string;
+}
+
 export const authApi = createApi({
   reducerPath: "authApi",
   baseQuery: fetchBaseQuery({
     baseUrl: `${config.BACKEND_URL}/v1`,
     prepareHeaders: (headers, { getState }) => {
-      // Get the token from the state
       const token = (getState() as RootState).auth.token;
-      // If there is a token, add it to the headers
       if (token) {
         headers.set("authorization", `Bearer ${token}`);
       }
+      // Add required headers for CORS
+      headers.set("Accept", "application/json");
+      headers.set("Content-Type", "application/json");
       return headers;
     },
+    // Enable credentials for cross-origin requests
+    credentials: "include",
   }),
   tagTypes: ["User"],
   endpoints: (builder) => ({
-    refreshToken: builder.query({
-      query: () => "/users/refresh-token",
+    refreshToken: builder.query<LoginResponse, void>({
+      query: () => ({
+        url: "/users/refresh-token",
+        // Ensure credentials are included for this specific endpoint
+        credentials: "include",
+      }),
       onQueryStarted: async (_, { queryFulfilled, dispatch }) => {
         try {
           const { data } = await queryFulfilled;
-          console.log("Refresh token recieved: ", data);
+          console.log("Refresh token received: ", data);
           dispatch(setToken(data.token));
         } catch (error) {
-          console.log("error fetching login data: ", error);
+          console.error("Error refreshing token: ", error);
+          // Handle token refresh error (e.g., logout user)
         }
       },
     }),
-    me: builder.query({
-      query: () => "/users/me",
-      onQueryStarted: async (_, { queryFulfilled, dispatch }) => {
-        const { data } = await queryFulfilled;
-        dispatch(setUser(data));
-      },
-    }),
-    register: builder.mutation({
-      query: (body) => ({ url: "/users", body, method: "POST" }),
-    }),
-    login: builder.mutation({
-      query: (body) => ({ url: "/login", method: "POST", body }),
+    me: builder.query<User, void>({
+      query: () => ({
+        url: "/users/me",
+        credentials: "include",
+      }),
       onQueryStarted: async (_, { queryFulfilled, dispatch }) => {
         try {
           const { data } = await queryFulfilled;
-          console.log("Login data recieved: ", data);
+          dispatch(setUser(data));
+        } catch (error) {
+          console.error("Error fetching user data: ", error);
+        }
+      },
+    }),
+    register: builder.mutation({
+      query: (body) => ({
+        url: "/users",
+        method: "POST",
+        body,
+        credentials: "include",
+      }),
+    }),
+    login: builder.mutation<LoginResponse, any>({
+      query: (body) => ({
+        url: "/login",
+        method: "POST",
+        body,
+        credentials: "include",
+      }),
+      onQueryStarted: async (_, { queryFulfilled, dispatch }) => {
+        try {
+          const { data } = await queryFulfilled;
+          console.log("Login data received: ", data);
           dispatch(setToken(data.token));
         } catch (error) {
-          console.log("error fetching login data: ", error);
+          console.error("Error during login: ", error);
         }
       },
     }),
     resetPasswordRequest: builder.mutation({
       query: (body) => ({
         url: "/users/reset-password-request",
-        body,
         method: "POST",
+        body,
+        credentials: "include",
       }),
     }),
-    resetPassword: builder.mutation({
+    resetPassword: builder.mutation<void, ResetPasswordRequest>({
       query: (request) => ({
         url: "/users/reset-password",
         method: "POST",
@@ -68,19 +115,42 @@ export const authApi = createApi({
         headers: {
           Authorization: `Bearer ${request.token}`,
         },
+        credentials: "include",
       }),
     }),
     resendVerificationEmail: builder.mutation({
-      query: () => ({ url: "/users/verification", method: "POST" }),
+      query: () => ({
+        url: "/users/verification",
+        method: "POST",
+        credentials: "include",
+      }),
     }),
     updateProfile: builder.mutation({
-      query: (data) => ({ url: "/profiles", body: data, method: "PUT" }),
+      query: (data) => ({
+        url: "/profiles",
+        method: "PUT",
+        body: data,
+        credentials: "include",
+      }),
     }),
     uploadProfileImage: builder.mutation({
-      query: (data) => ({ url: "/profiles/img", body: data, method: "POST" }),
+      query: (data) => ({
+        url: "/profiles/img",
+        method: "POST",
+        body: data,
+        credentials: "include",
+        // Remove Content-Type header for file uploads
+        prepareHeaders: (headers) => {
+          headers.delete("Content-Type");
+          return headers;
+        },
+      }),
     }),
     resources: builder.query({
-      query: () => "/resources",
+      query: () => ({
+        url: "/resources",
+        credentials: "include",
+      }),
     }),
   }),
 });

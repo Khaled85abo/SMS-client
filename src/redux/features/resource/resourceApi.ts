@@ -10,10 +10,15 @@ export const resourceApi = createApi({
         prepareHeaders: (headers, { getState }) => {
             const token = (getState() as RootState).auth.token;
             if (token) {
-                headers.set("authorization", `bearer ${token}`);
+                headers.set("authorization", `Bearer ${token}`);
             }
+            // Add required headers for CORS
+            headers.set("Accept", "application/json");
+            headers.set("Content-Type", "application/json");
             return headers;
         },
+        // Enable credentials for cross-origin requests
+        credentials: "include",
     }),
     tagTypes: ["Resources", "SingleResource"],
     endpoints: (builder) => ({
