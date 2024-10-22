@@ -129,7 +129,7 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSin
     };
 
     const createItem = (item: { name: string, description: string }) => {
-        let newItem: { box_id: number; quantity: number; name: string; description: string; image?: string, box: string, workspace: string } = { ...item, box_id: box.id, quantity: 1, box: box.name, workspace: workspace.name }
+        let newItem: { box_id: number; quantity: number; name: string; description: string; image?: string, box: string, workspace: string, workspace_id: number } = { ...item, box_id: box.id, quantity: 1, box: box.name, workspace: workspace.name, workspace_id: workspace.id }
         const image = selectedItem?.imgs[selectedImageIndex] || null;
         if (image) {
             // Remove the data URL prefix if it exists

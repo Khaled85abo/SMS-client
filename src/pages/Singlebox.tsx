@@ -48,7 +48,7 @@ const SingleBox = () => {
     const [modalOpen, setModalOpen] = useState(false);
     const [modalType, setModalType] = useState<ActionType | null>(null);
     const [selectedItem, setSelectedItem] = useState<Item | null>(null);
-    const [newItem, setNewItem] = useState({ name: '', description: '', box_id: boxId, quantity: 1, image: '' });
+    const [newItem, setNewItem] = useState({ name: '', description: '', box_id: boxId, quantity: 1, image: '', workspace_id: workspaceId });
     const [modalError, setModalError] = useState<string | null>(null);
     const [modalSuccess, setModalSuccess] = useState<string | null>(null);
     const [isLocating, setIsLocating] = useState(false);
@@ -68,9 +68,9 @@ const SingleBox = () => {
         setModalSuccess(null);
         // Reset the newWorkspace state if it's a create action
         if (type === actionTypes.create) {
-            setNewItem({ name: '', description: '', box_id: boxId, quantity: 1, image: '' });
+            setNewItem({ name: '', description: '', box_id: boxId, quantity: 1, image: '', workspace_id: workspaceId });
         } else if (type === actionTypes.edit && item) {
-            setNewItem({ name: item.name, description: item.description, box_id: boxId, quantity: item.quantity, image: item.image });
+            setNewItem({ name: item.name, description: item.description, box_id: boxId, quantity: item.quantity, image: item.image, workspace_id: workspaceId });
         }
     };
 
@@ -78,7 +78,7 @@ const SingleBox = () => {
         setModalOpen(false);
         setModalType(null);
         setSelectedItem(null);
-        setNewItem({ name: '', description: '', box_id: boxId, quantity: 1, image: '' });
+        setNewItem({ name: '', description: '', box_id: boxId, quantity: 1, image: '', workspace_id: workspaceId });
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement>) => {
