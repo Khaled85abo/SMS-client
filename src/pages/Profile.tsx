@@ -3,10 +3,7 @@ import { useAppSelector } from "../hooks/redux";
 import placeHolder from "../assets/placeholder_img.jpeg";
 import ReactCrop from "react-image-crop";
 import {
-  useLazyMeQuery,
-  useResendVerificationEmailMutation,
-  useUpdateProfileMutation,
-  useUploadProfileImageMutation,
+  useResendVerificationEmailMutation
 } from "../redux/features/auth/authApi";
 import { resizeFile } from "../utilities/resizeImage";
 import useCrop from "../hooks/useCrop";
@@ -113,19 +110,14 @@ const ProfileStatus = () => {
     onUseImageClick,
     setImageSrc,
   } = useCrop();
-  const [
-    uploadProfileImgToServer,
-    { isError: uploadImgError, isLoading: uploadImgLoading },
-  ] = useUploadProfileImageMutation();
+
   const [showModal, setShowModal] = useState(false);
   const user = useAppSelector((state) => state.auth.user);
   const [edit, setEdit] = useState(false);
   const [profileData, setProfileData] = useState<Profile>(user?.profile || {});
   const [userImage, setUserImage] = useState(
-    user.profile?.profile_picture_url || placeHolder
+    placeHolder
   );
-  const [updateProfile, { isLoading }] = useUpdateProfileMutation();
-  const [refetchUser] = useLazyMeQuery();
   const handleUpdateProfile = async (e?: React.FormEvent<HTMLFormElement>) => {
     if (e) e.preventDefault();
 
@@ -142,19 +134,12 @@ const ProfileStatus = () => {
     }, {});
     try {
       console.log("Update profile form submitted", filtereProfileData);
-      const response = await updateProfile(filtereProfileData);
-      console.log(response);
-      if ("data" in response) {
-        await refetchUser({});
-        setEdit(false);
-      }
+
     } catch (err) {
       console.log(err);
     }
   };
-  const handleUpdateProfileData = (key: string, value: string | number) => {
-    setProfileData((prev) => ({ ...prev, [key]: value }));
-  };
+
 
   const handleUploadImage = async () => {
     const croppedImageBlob = await onUseImageClick();
@@ -180,14 +165,8 @@ const ProfileStatus = () => {
       }
       const formData = new FormData();
       formData.append("file", resizedImage, "croppedImage.webp");
-      const response = await uploadProfileImgToServer(formData);
-      console.log("response after uploading image: ", response);
 
-      if ("data" in response) {
-        await refetchUser({});
-        setUserImage(response.data?.profile_picture_url || "");
-        setShowModal(false);
-      }
+
     }
   };
 
@@ -262,15 +241,11 @@ const ProfileStatus = () => {
                   onClick={handleUploadImage}
                   className=" bg-transparent hover:bg-blue-500 text-gray-700 font-semibold hover:text-white py-2 px-4 border border-gray-600 hover:border-transparent rounded"
                 >
-                  {uploadImgLoading ? "Uploading image..." : "Use image"}
+                  {/* {uploadImgLoading ? "Uploading image..." : "Use image"} */}
                 </button>
               </div>
             </div>
-            {uploadImgError && (
-              <div className="text-red-700">
-                <p>{uploadImgError}</p>
-              </div>
-            )}
+
           </div>
         </div>
       )}
@@ -352,29 +327,7 @@ const ProfileStatus = () => {
                     <label htmlFor={key}>{key}:</label>
                     {edit ? (
                       <div className="mt-2 mb-3 relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-teal-300 sm:text-sm">
-                        {profileProperties[key]?.type == "textarea" ? (
-                          <textarea
-                            rows={5}
-                            id={key}
-                            placeholder={`Add info here`}
-                            className="p-2 w-full"
-                            value={value ?? ""}
-                            onChange={(e) =>
-                              handleUpdateProfileData(key, e.target.value)
-                            }
-                          />
-                        ) : (
-                          <input
-                            id={key}
-                            placeholder={`Add info here`}
-                            type={profileProperties[key]?.type || "text"}
-                            className="p-2 w-full"
-                            value={value ?? ""}
-                            onChange={(e) =>
-                              handleUpdateProfileData(key, e.target.value)
-                            }
-                          />
-                        )}
+
                       </div>
                     ) : (
                       <span className="ml-3">{value ?? "NA"}</span>
@@ -397,13 +350,7 @@ const ProfileStatus = () => {
             >
               Cancel Edit
             </button>
-            <button
-              disabled={isLoading}
-              onClick={() => handleUpdateProfile()}
-              className="ml-3 bg-transparent hover:bg-blue-500 text-gray-700 font-semibold hover:text-white py-2 px-4 border border-gray-600 hover:border-transparent rounded"
-            >
-              {isLoading ? "Updating profile..." : "Save changes"}
-            </button>
+
           </>
         ) : (
           <button
@@ -414,25 +361,6 @@ const ProfileStatus = () => {
           </button>
         )}
       </div>
-    </div>
-  );
-};
-
-const ItemsStatus = () => {
-  return (
-    <div className="bg-white rounded-md border border-gray-100 p-6 shadow-md shadow-black/5">
-      <div className="flex justify-between mb-6">
-        <div>
-          <div className="text-2xl font-semibold mb-1">Clothing items</div>
-          <div className="text-sm font-medium text-gray-400">total: NA</div>
-        </div>
-      </div>
-      <a
-        href=""
-        className="text-[#f84525] font-medium text-sm hover:text-red-800"
-      >
-        View
-      </a>
     </div>
   );
 };
