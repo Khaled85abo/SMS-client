@@ -15,6 +15,7 @@ type CameraDetectorProps = {
 type AccumulatedResults = Map<string, string[]>;
 
 const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSingleBox }: CameraDetectorProps) => {
+    const INTERVAL_TIME = 2 * 1000
     const [addItem, { isLoading: isAddingItem, isError: isAddingItemError, error: addingItemError }] = useCreateItemMutation();
     const [successAddingItem, setSuccessAddingItem] = useState<string | null>(null);
     const [isCapturing, setIsCapturing] = useState(false);
@@ -113,7 +114,7 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSin
 
         if (isCapturing) {
             startVideo();
-            intervalId = setInterval(captureAndSend, 2000);
+            intervalId = setInterval(captureAndSend, INTERVAL_TIME);
         } else {
             stopVideo();
         }
@@ -141,6 +142,7 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSin
             if ('data' in result) {
                 setSuccessAddingItem(newItem.name);
                 getSingleBox(box.id);
+                handleCloseModal();
             }
         })
     }
@@ -154,10 +156,6 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSin
         setSelectedImageIndex(0);
     };
 
-    const handleCreateItem = (name: string, description: string) => {
-        createItem({ name, description });
-        handleCloseModal();
-    };
 
     const handleImageSelect = (index: number) => {
         setSelectedImageIndex(index);
@@ -215,8 +213,11 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSin
                 </div>
             )} */}
             {accumulatedResults.size > 0 && <div className="ocr-result mt-4">
+                {successAddingItem && <p className="text-green-500">Successfully added {successAddingItem}</p>}
+                {isError && <p className="text-red-500">Error: {(error as any)?.data?.message || 'An error occurred'}</p>}
+                {isLoading && <p className="text-yellow-500">Processing...</p>}
                 <h3 className="font-bold">Classified Items:</h3>
-                <div className="bg-gray-100 p-2 rounded mt-2 overflow-auto max-h-60">
+                <div className="bg-gray-100 p-2 rounded mt-2 overflow-auto max-h-[80vh]">
                     {Array.from(accumulatedResults).map(([name, imgs]) => (
                         <div key={name} className="flex flex-col mb-4">
                             <div className="flex justify-between items-center mb-2">
@@ -237,12 +238,9 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSin
                         </div>
                     ))}
                 </div>
-                {successAddingItem && <p>Successfully added {successAddingItem}</p>}
-                {isAddingItemError && <p>Error: {(addingItemError as any)?.data?.message || 'An error occurred'}</p>}
-                {isAddingItem && <p>Adding box...</p>}
-                {isError && <p>Error: {(error as any)?.data?.message || 'An error occurred'}</p>}
-                {isLoading && <p>Processing...</p>}
-            </div>}
+
+            </div>
+            }
             {selectedItem && (
                 <Modal onClose={handleCloseModal}>
                     <div className="bg-white p-6 rounded-lg">
@@ -272,7 +270,7 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSin
                             const form = e.target as HTMLFormElement;
                             const name = (form.elements.namedItem('name') as HTMLInputElement).value;
                             const description = (form.elements.namedItem('description') as HTMLTextAreaElement).value;
-                            handleCreateItem(name, description);
+                            createItem({ name, description });
                         }}>
                             <div className="mb-4">
                                 <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
@@ -282,7 +280,8 @@ const ItemsClassifier: React.FC<CameraDetectorProps> = ({ box, workspace, getSin
                                 <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
                                 <textarea id="description" name="description" rows={3} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"></textarea>
                             </div>
-                            <button type="submit" className="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Add Item</button>
+                            {isAddingItemError && <p className="text-red-500">Error: {(addingItemError as any)?.data?.message || 'An error occurred'}</p>}
+                            <button type="submit" disabled={isAddingItem} className="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">{isAddingItem ? 'Adding...' : 'Add Item'}</button>
                         </form>
                     </div>
                 </Modal>
