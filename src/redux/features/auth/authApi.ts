@@ -125,27 +125,8 @@ export const authApi = createApi({
         credentials: "include",
       }),
     }),
-    updateProfile: builder.mutation({
-      query: (data) => ({
-        url: "/profiles",
-        method: "PUT",
-        body: data,
-        credentials: "include",
-      }),
-    }),
-    uploadProfileImage: builder.mutation({
-      query: (data) => ({
-        url: "/profiles/img",
-        method: "POST",
-        body: data,
-        credentials: "include",
-        // Remove Content-Type header for file uploads
-        prepareHeaders: (headers) => {
-          headers.delete("Content-Type");
-          return headers;
-        },
-      }),
-    }),
+
+
     resources: builder.query({
       query: () => ({
         url: "/resources",
@@ -164,7 +145,5 @@ export const {
   useLoginMutation,
   useResetPasswordRequestMutation,
   useResetPasswordMutation,
-  useResendVerificationEmailMutation,
-  useUpdateProfileMutation,
-  useUploadProfileImageMutation,
+  useResendVerificationEmailMutation
 } = authApi;
