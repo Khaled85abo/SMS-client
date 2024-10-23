@@ -6,9 +6,9 @@ import { useParams, Link } from 'react-router-dom';
 import CameraDetector from '../components/CameraDetector';
 import ResourceForm from '../components/ResourceForm';
 import { Box, Resource } from '../types/workspace';
-import { useSelector } from 'react-redux';
-import { RootState } from '../redux/store';
-import { createSelector } from '@reduxjs/toolkit';
+// import { useSelector } from 'react-redux';
+// import { RootState } from '../redux/store';
+// import { createSelector } from '@reduxjs/toolkit';
 
 const actionTypes = {
     create: 'create',
@@ -23,12 +23,12 @@ const bytesToMB = (bytes: number): string => {
     return mb.toFixed(2);
 };
 
-const selectWorkspacesResources = (state: RootState) => state.resource.resources;
-const selectWorkspaceId = (state: RootState, workspaceId: string | undefined) => workspaceId;
-const selectWorkspaceResources = createSelector(
-    [selectWorkspacesResources, selectWorkspaceId],
-    (resources, workspaceId) => resources[workspaceId] || []
-)
+// const selectWorkspacesResources = (state: RootState) => state.resource.resources;
+// const selectWorkspaceId = (state: RootState, workspaceId: string | undefined) => workspaceId;
+// const selectWorkspaceResources = createSelector(
+//     [selectWorkspacesResources, selectWorkspaceId],
+//     (resources, workspaceId) => resources[workspaceId] || []
+// )
 
 
 // Add this selector outside of the component
@@ -41,7 +41,7 @@ const selectWorkspaceResources = createSelector(
 const SingleWorkspace = () => {
     const { workspaceId } = useParams();
     const [deleteResource, { isLoading: isDeletingResource }] = useDeleteResourceMutation();
-    const [getWorkspaceResources] = useLazyGetWorkspaceResourcesQuery();
+    const [getWorkspaceResources, { data: workspaceResources }] = useLazyGetWorkspaceResourcesQuery();
     const [getSingleWorkspace, { data: singleWorkspace, isLoading, isSuccess }] = useLazyGetSingleWorkspaceQuery({});
     const [createBox, { isLoading: isCreating }] = useCreateBoxMutation();
     const [updateBox, { isLoading: isUpdating }] = useUpdateBoxMutation();
@@ -56,9 +56,9 @@ const SingleWorkspace = () => {
     const [showResourceForm, setShowResourceForm] = useState(false);
 
     // Replace the existing useSelector call with this:
-    const workspaceResources = useSelector((state: RootState) =>
-        selectWorkspaceResources(state, workspaceId)
-    );
+    // const workspaceResources = useSelector((state: RootState) =>
+    //     selectWorkspaceResources(state, workspaceId)
+    // );
 
     const openModal = (type: ActionType, box: Box | null = null) => {
         setModalType(type);
@@ -204,10 +204,11 @@ const SingleWorkspace = () => {
                                     </div>
                                     <div>
                                         <button
+                                            disabled={isDeletingResource}
                                             onClick={() => handleDeleteResource(resource.id)}
                                             className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm"
                                         >
-                                            Delete
+                                            {isDeletingResource ? 'Deleting...' : 'Delete'}
                                         </button>
                                     </div>
                                 </li>

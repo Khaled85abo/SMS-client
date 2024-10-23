@@ -108,6 +108,7 @@ const SingleBox = () => {
                 .then(() => {
                     setModalSuccess('Box created successfully!');
                     getSingleBox(boxId);
+                    setNewItem({ name: '', description: '', box_id: boxId, quantity: 1, image: '', workspace_id: workspaceId });
                 })
                 .catch((err) => setModalError(`Error: ${err.message}`));
         } else if (modalType === actionTypes.edit && selectedItem) {
@@ -234,6 +235,11 @@ const SingleBox = () => {
         }
     };
 
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        submitModal();
+    };
+
     useEffect(() => {
         if (isLocating && !isProcessing) {
             captureAndLocate();
@@ -350,7 +356,7 @@ const SingleBox = () => {
                                 modalType === 'edit' ? 'Edit Item' : 'Delete Item'}
                         </h3>
                         {modalType !== 'delete' ? (
-                            <form>
+                            <form onSubmit={handleSubmit}>
                                 <div className="mt-2">
                                     <label className="block text-sm font-medium text-gray-700">Name</label>
                                     <input
@@ -397,8 +403,9 @@ const SingleBox = () => {
                         )}
                         <div className="mt-4">
                             <button
+                                disabled={isCreating || isUpdating}
                                 className={`${modalType === 'delete' ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'
-                                    } text-white px-4 py-2 rounded mr-2`}
+                                    } ${isCreating || isUpdating ? 'bg-gray-300 hover:bg-gray-400' : ''} text-white px-4 py-2 rounded mr-2`}
                                 onClick={submitModal}
                             >
                                 {modalType === 'create' ? 'Create' : modalType === 'edit' ? 'Save' : 'Delete'}
