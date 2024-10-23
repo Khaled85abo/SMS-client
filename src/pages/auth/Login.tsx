@@ -47,7 +47,7 @@ const Login = () => {
       });
       await getCurrenctUserInfo({});
       if ("data" in tokenResult) {
-        navigate("/profile");
+        navigate("/workspaces");
       }
     } catch (e) {
       console.log("error logging in: ", e);
