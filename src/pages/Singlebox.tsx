@@ -106,7 +106,7 @@ const SingleBox = () => {
             createItem({ ...newItem, workspace: singleWorkspace?.name, box: singleBox?.name })
                 .unwrap()
                 .then(() => {
-                    setModalSuccess('Box created successfully!');
+                    setModalSuccess('Item created successfully!');
                     getSingleBox(boxId);
                     setNewItem({ name: '', description: '', box_id: boxId, quantity: 1, image: '', workspace_id: workspaceId });
                 })

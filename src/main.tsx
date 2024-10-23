@@ -35,14 +35,15 @@ import Search from "./pages/Seach";
 import { useGetWorkspacesQuery } from "./redux/features/workspace/workspaceApi";
 
 const ProtectedRoutes = () => {
-  const location = useLocation();
   const user = useAppSelector((state) => state.auth.user);
-  useEffect(() => { }, [location.pathname]);
+  const location = useLocation();
 
-  if (user) {
-    return <Outlet />;
+  if (!user) {
+    // Redirect to login page if there's no user, preserving the intended destination
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
-  return <Navigate to="/" />;
+
+  return <Outlet />;
 };
 
 function App() {
