@@ -13,8 +13,7 @@ export const resourceApi = createApi({
                 headers.set("authorization", `Bearer ${token}`);
             }
             // Add required headers for CORS
-            headers.set("Accept", "application/json");
-            headers.set("Content-Type", "application/json");
+
             return headers;
         },
         // Enable credentials for cross-origin requests

@@ -376,6 +376,7 @@ const SingleBox = () => {
                                         type="file"
                                         name="image"
                                         accept="image/*"
+                                        capture="environment"
                                         onChange={handleFileChange}
                                         className="mt-1 block w-full text-sm text-gray-500
                                             file:mr-4 file:py-2 file:px-4

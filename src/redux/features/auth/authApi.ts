@@ -127,17 +127,10 @@ export const authApi = createApi({
     }),
 
 
-    resources: builder.query({
-      query: () => ({
-        url: "/resources",
-        credentials: "include",
-      }),
-    }),
   }),
 });
 
 export const {
-  useResourcesQuery,
   useLazyRefreshTokenQuery,
   useMeQuery,
   useLazyMeQuery,
